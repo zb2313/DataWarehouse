@@ -1,8 +1,10 @@
 import json
+
 import pandas as pd
 
 f = open("E:\\Movies_and_TV_5\\Movies_and_TV_5.json")
 js = []
+isGot = []
 formerAsin = "null"
 for line in f.readlines():
     js_l = json.loads(line)
@@ -14,7 +16,11 @@ for line in f.readlines():
     formerAsin = Asin
 
     js.append(js_l['asin'])
+    isGot.append(0)
     print(js_l['asin'])
-test = pd.DataFrame(columns=['asin'], data=js).drop_duplicates()
-test.to_csv('asin.csv')
+
+dictionary = {'asin': js, "isGot": isGot}
+# test = pd.DataFrame(columns=['asin'], data=js).drop_duplicates()
+test = pd.DataFrame(dictionary).drop_duplicates()
+test.to_csv('newAsin.csv', index=False)
 # print(js)
