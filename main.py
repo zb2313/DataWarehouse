@@ -12,7 +12,7 @@ import requests  # 导入requests包
 from bs4 import BeautifulSoup
 
 sleep_time = 1
-long_sleep_time = 60 * 2
+long_sleep_time = 60 * 3
 tol_attempts = 0  # 某段时间总尝试次数
 success_attempts = 0  # 该段时间内的成功次数
 cookies = {}
@@ -77,13 +77,18 @@ def download_one_page(url, lineNum):
 
     while soup == -1:  # 不成功继续尝试
         attempts += 1
+        if attempts == 5:
+            break
+
         time.sleep(sleep_time)
         with eventlet.Timeout(10, False):
             soup = getStrHtml(url)
 
+
     # 爬取成功后记录已爬取信息
-    df.loc[lineNum, 'isGot'] = 1
-    df.to_csv("newAsin.csv", index=False)
+    if soup != -1:
+        df.loc[lineNum, 'isGot'] = 1
+        df.to_csv("newAsin.csv", index=False)
 
     # 在这里存储爬取的信息
     dictionary = {
@@ -95,11 +100,11 @@ def download_one_page(url, lineNum):
     # 待完成
     # 待完成
     # 待完成
-    # 
+    #
 
     global tol_attempts, success_attempts
     print(tol_attempts, success_attempts, 'suc_rate:', success_attempts / tol_attempts)
-    if success_attempts / tol_attempts < 0.4:  # 成功率低于0.2的话休息2分钟
+    if success_attempts / tol_attempts < 0.1:  # 成功率低于0.2的话休息2分钟
         time.sleep(long_sleep_time)
         success_attempts = 0  # 重置计数
         tol_attempts = 0
