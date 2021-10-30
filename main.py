@@ -88,11 +88,14 @@ def download_one_page(url, lineNum):
     # 在这里存储爬取的信息
     dictionary = {
         'movie_id': df.loc[lineNum, 'asin'],
+        # 'actors': soup.get('xxxxx'),
+        # 'director': soup.get('xxxxx'),
+        # .......
     }
     # 待完成
     # 待完成
     # 待完成
-    #
+    # 
 
     global tol_attempts, success_attempts
     print(tol_attempts, success_attempts, 'suc_rate:', success_attempts / tol_attempts)
