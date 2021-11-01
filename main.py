@@ -1,12 +1,18 @@
 # 作者：韩乃超
 # 日期：2021年10月29日
-
+######
+#
+#
+#   使用方法：先运行get_asins.py生成爬取记录表 newAsin.csv
+#   接着运行本文件
 
 import csv
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 
 import eventlet
+import jsonlines
 import pandas as pd
 import requests  # 导入requests包
 from bs4 import BeautifulSoup
@@ -16,7 +22,6 @@ long_sleep_time = 60 * 3
 tol_attempts = 0  # 某段时间总尝试次数
 success_attempts = 0  # 该段时间内的成功次数
 cookies = {}
-df = pd.read_csv('newAsin.csv')  # 存储是否被爬取的记录
 
 web_header = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36',
@@ -27,7 +32,6 @@ web_header = {
     'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7,zh-TW;q=0.6',
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'accept-encoding': 'gzip, deflate, br'
-
 }
 
 
@@ -68,22 +72,21 @@ def getStrHtml(url):
 def download_one_page(url, lineNum):
     # print(lineNum)
 
+    df = pd.read_csv('newAsin.csv')  # 存储是否被爬取的记录
+    jsonwriter = jsonlines.open("movie.json", "a")
     # 如果已经被写入，则直接跳过
     if df.loc[lineNum, 'isGot'] == 1:
         return
 
     soup = getStrHtml(url)  # 尝试一次
     attempts = 0
-
     while soup == -1:  # 不成功继续尝试
         attempts += 1
         if attempts == 5:
             break
-
         time.sleep(sleep_time)
         with eventlet.Timeout(10, False):
             soup = getStrHtml(url)
-
 
     # 爬取成功后记录已爬取信息
     if soup != -1:
@@ -92,11 +95,105 @@ def download_one_page(url, lineNum):
 
     # 在这里存储爬取的信息
     dictionary = {
-        'movie_id': df.loc[lineNum, 'asin'],
-        # 'actors': soup.get('xxxxx'),
+        'ASIN': '',
+        'Actors': '',
+        'Director': '',
+        'Date First Available': '',
+        'style': '',
+        'version': [],
+        'reviews': [],
+
         # 'director': soup.get('xxxxx'),
         # .......
     }
+    # ASIN /Actors /Director /Date First Available信息
+    uldata = soup.select("#detailBullets_feature_div > ul > li")
+    # print(uldata)
+    for index in range(len(uldata)):
+        str1 = uldata[index].select("li > span > span")[0].get_text()
+        str2 = uldata[index].select("li > span > span")[1].get_text()
+        # print(str1)
+        # print(str2)
+        if "ASIN" == str1[0: len("ASIN")]:
+            dictionary['ASIN'] = str2
+        elif "Actors" == str1[0: len("Actors")]:
+            dictionary['Actors'] = str2
+        elif "Director" == str1[0: len("Director")]:
+            dictionary['Director'] = str2
+        elif "Date First Available" == str1[0: len("Date First Available")]:
+            dictionary['Date First Available'] = str2
+
+    # style（风格）
+    styledata = soup.select("#wayfinding-breadcrumbs_feature_div > ul > li > span > a")
+    # print(styledata)
+    lenth = len(styledata)
+    # print(lenth)
+    tempstr = styledata[lenth - 1].get_text()
+    # print(tempstr.strip())
+    dictionary['style'] = styledata[lenth - 1].get_text().strip()
+
+    # 格式
+    versiondata = soup.select("#tmmSwatches > ul > li > span > span > span > a > span:nth-child(1)")
+    for item in versiondata:
+        # print(item.get_text())
+        dictionary['version'].append(item.get_text())
+
+    # 评论相关信息
+    reviewdata = soup.select("#cm-cr-dp-review-list > div")
+    reviews = []
+
+    count = 0
+    for item in reviewdata: # 循环读取评论
+        count += 1
+        if count > 5:
+            break
+
+        # print(item)
+        # print("\n\n\n\n\n")
+
+        reviewerid = item['id']
+        # print(item['id']) #id
+
+        reviewername = item.select("div > a > div.a-profile-content > span")[0].get_text()
+        # print(item.select("div > a > div.a-profile-content > span")[0].get_text()) # 用户名
+
+        helpfulstr = item.select(".a-size-base.a-color-tertiary.cr-vote-text")[0].get_text()
+        numhelpful = re.findall("\d+", helpfulstr)[0]
+        # print(helpfulstr)
+        # print(re.findall("\d+", helpfulstr)[0]) # 有帮助人数
+
+        starclass = item.select(".a-icon.a-icon-star")[0]['class'][2]
+        starnum = re.findall("\d+", starclass)[0]
+        # print(re.findall("\d+", starclass)[0]) # 星级
+
+        dateinfo = item.select(".a-color-secondary.review-date")[0].get_text()
+        # print(dateinfo) # 时间
+
+        summary = item.select(".a-color-base.review-title-content.a-text-bold > span")[0].get_text()
+        # print(summary) # 总结
+
+        text = item.select(".a-expander-partial-collapse-content > span")[0].get_text()
+        # print(text) # 评论text
+
+        reviewdic = {
+            'reviewerid': reviewerid,
+            'rewiewername': reviewername,
+            'helpfulnum': numhelpful,
+            'score': starnum,
+            'date': dateinfo,
+            'summary': summary,
+            'text': text
+        }
+        # print(reviewdic)
+        reviews.append(reviewdic)
+
+        # dictionary['review'].append(reviewdic)
+        # print("end")
+
+    # print(reviews)
+    dictionary['reviews'] = reviews
+    jsonwriter.write(dictionary)
+    jsonwriter.close()
     # 待完成
     # 待完成
     # 待完成
@@ -115,14 +212,15 @@ def download_one_page(url, lineNum):
 
 if __name__ == '__main__':
 
-    asinFile = open("asin.csv")
+    asinFile = open("newAsin.csv")
     reader = csv.reader(asinFile)
     # 创建线程池
-    with ThreadPoolExecutor(20) as t:
+    with ThreadPoolExecutor(1) as t:
         for item in reader:
             if reader.line_num == 1:
                 continue
-            url = 'https://www.amazon.com/dp/' + item[1]
+
+            url = 'https://www.amazon.com/dp/' + item[0]
             t.submit(download_one_page, url, reader.line_num)
 
     asinFile.close()
