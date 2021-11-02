@@ -17,7 +17,7 @@ import pandas as pd
 import requests  # 导入requests包
 from bs4 import BeautifulSoup
 
-sleep_time = 1
+sleep_time = 3
 long_sleep_time = 60 * 3
 tol_attempts = 0  # 某段时间总尝试次数
 success_attempts = 0  # 该段时间内的成功次数
@@ -82,11 +82,16 @@ def download_one_page(url, lineNum):
     attempts = 0
     while soup == -1:  # 不成功继续尝试
         attempts += 1
-        if attempts == 5:
-            break
+        # if attempts == 5:
+            # break
         time.sleep(sleep_time)
         with eventlet.Timeout(10, False):
             soup = getStrHtml(url)
+
+    # 爬取成功后记录已爬取信息
+    if soup != -1:
+        df.loc[lineNum, 'isGot'] = 1
+        df.to_csv("newAsin.csv", index=False)
 
     # 在这里存储爬取的信息
     dictionary = {
@@ -103,6 +108,7 @@ def download_one_page(url, lineNum):
     }
     # ASIN /Actors /Director /Date First Available信息
     uldata = soup.select("#detailBullets_feature_div > ul > li")
+    # uldata = soup.select(".a-unordered-list.a-nostyle.a-vertical.a-spacing-none.detail-bullet-list > li")
     # print(uldata)
     for index in range(len(uldata)):
         str1 = uldata[index].select("li > span > span")[0].get_text()
@@ -117,6 +123,10 @@ def download_one_page(url, lineNum):
             dictionary['Director'] = str2
         elif "Date First Available" == str1[0: len("Date First Available")]:
             dictionary['Date First Available'] = str2
+
+    if dictionary['ASIN'] == "":
+        dictionary['ASIN'] = df.loc[lineNum, 'asin']
+
 
     # style（风格）
     styledata = soup.select("#wayfinding-breadcrumbs_feature_div > ul > li > span > a")
@@ -138,7 +148,7 @@ def download_one_page(url, lineNum):
     reviews = []
 
     count = 0
-    for item in reviewdata:  # 循环读取评论
+    for item in reviewdata: # 循环读取评论
         count += 1
         if count > 5:
             break
@@ -185,22 +195,18 @@ def download_one_page(url, lineNum):
         # dictionary['review'].append(reviewdic)
         # print("end")
 
-    if dictionary['ASIN'] == "":
-        dictionary['ASIN'] = df.loc[lineNum, 'asin']
-
     # print(reviews)
     dictionary['reviews'] = reviews
     jsonwriter.write(dictionary)
     jsonwriter.close()
-
-    # 爬取成功后记录已爬取信息
-    if soup != -1:
-        df.loc[lineNum, 'isGot'] = 1
-        df.to_csv("newAsin.csv", index=False)
+    # 待完成
+    # 待完成
+    # 待完成
+    #
 
     global tol_attempts, success_attempts
     print(tol_attempts, success_attempts, 'suc_rate:', success_attempts / tol_attempts)
-    if success_attempts / tol_attempts < 0.1:  # 成功率低于0.2的话休息2分钟
+    if success_attempts / tol_attempts < 0.2:  # 成功率低于0.2的话休息2分钟
         time.sleep(long_sleep_time)
         success_attempts = 0  # 重置计数
         tol_attempts = 0
@@ -214,7 +220,7 @@ if __name__ == '__main__':
     asinFile = open("newAsin.csv")
     reader = csv.reader(asinFile)
     # 创建线程池
-    with ThreadPoolExecutor(15) as t:
+    with ThreadPoolExecutor(5) as t:
         for item in reader:
             if reader.line_num == 1:
                 continue
