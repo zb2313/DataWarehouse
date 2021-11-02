@@ -88,11 +88,6 @@ def download_one_page(url, lineNum):
         with eventlet.Timeout(10, False):
             soup = getStrHtml(url)
 
-    # 爬取成功后记录已爬取信息
-    if soup != -1:
-        df.loc[lineNum, 'isGot'] = 1
-        df.to_csv("newAsin.csv", index=False)
-
     # 在这里存储爬取的信息
     dictionary = {
         'ASIN': '',
@@ -143,7 +138,7 @@ def download_one_page(url, lineNum):
     reviews = []
 
     count = 0
-    for item in reviewdata: # 循环读取评论
+    for item in reviewdata:  # 循环读取评论
         count += 1
         if count > 5:
             break
@@ -190,14 +185,18 @@ def download_one_page(url, lineNum):
         # dictionary['review'].append(reviewdic)
         # print("end")
 
+    if dictionary['ASIN'] == "":
+        dictionary['ASIN'] = df.loc[lineNum, 'asin']
+
     # print(reviews)
     dictionary['reviews'] = reviews
     jsonwriter.write(dictionary)
     jsonwriter.close()
-    # 待完成
-    # 待完成
-    # 待完成
-    #
+
+    # 爬取成功后记录已爬取信息
+    if soup != -1:
+        df.loc[lineNum, 'isGot'] = 1
+        df.to_csv("newAsin.csv", index=False)
 
     global tol_attempts, success_attempts
     print(tol_attempts, success_attempts, 'suc_rate:', success_attempts / tol_attempts)
@@ -215,7 +214,7 @@ if __name__ == '__main__':
     asinFile = open("newAsin.csv")
     reader = csv.reader(asinFile)
     # 创建线程池
-    with ThreadPoolExecutor(1) as t:
+    with ThreadPoolExecutor(15) as t:
         for item in reader:
             if reader.line_num == 1:
                 continue
