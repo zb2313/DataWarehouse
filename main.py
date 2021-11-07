@@ -7,9 +7,14 @@
 #   接着运行本文件
 
 import csv
+import random
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 import eventlet
 import jsonlines
@@ -34,12 +39,19 @@ web_header = {
     'accept-encoding': 'gzip, deflate, br'
 }
 
+# proxy_list = [
+#
+#     {'https': 'https://190.93.189.102:8080'},
+#
+# ]
+
 
 def getStrHtml(url):
     try:
         global tol_attempts  # 总的尝试次数
         tol_attempts += 1
 
+        # proxy = random.choice(proxy_list)
         strhtml = requests.get(url, headers=web_header, cookies=cookies)
         # print(strhtml.status_code)
         soup = BeautifulSoup(strhtml.text, 'lxml')
@@ -82,127 +94,138 @@ def download_one_page(url, lineNum):
     attempts = 0
     while soup == -1:  # 不成功继续尝试
         attempts += 1
-        # if attempts == 5:
-            # break
+        if attempts == 5:
+            break
         time.sleep(sleep_time)
-        with eventlet.Timeout(10, False):
-            soup = getStrHtml(url)
+        # with eventlet.Timeout(10, False):
+        soup = getStrHtml(url)
 
     # 爬取成功后记录已爬取信息
     if soup != -1:
         df.loc[lineNum, 'isGot'] = 1
         df.to_csv("newAsin.csv", index=False)
 
-    # 在这里存储爬取的信息
-    dictionary = {
-        'ASIN': '',
-        'Actors': '',
-        'Director': '',
-        'Date First Available': '',
-        'style': '',
-        'version': [],
-        'reviews': [],
+    # 获取到信息了才去选择
+    if type(soup) != int:
+        # 在这里存储爬取的信息
+        dictionary = {
+            'ASIN': '',
+            'Actors': '',
+            'Director': '',
+            'Date First Available': '',
+            'style': '',
+            'version': [],
+            'reviews': [],
 
-        # 'director': soup.get('xxxxx'),
-        # .......
-    }
-    # ASIN /Actors /Director /Date First Available信息
-    uldata = soup.select("#detailBullets_feature_div > ul > li")
-    # uldata = soup.select(".a-unordered-list.a-nostyle.a-vertical.a-spacing-none.detail-bullet-list > li")
-    # print(uldata)
-    for index in range(len(uldata)):
-        str1 = uldata[index].select("li > span > span")[0].get_text()
-        str2 = uldata[index].select("li > span > span")[1].get_text()
-        # print(str1)
-        # print(str2)
-        if "ASIN" == str1[0: len("ASIN")]:
-            dictionary['ASIN'] = str2
-        elif "Actors" == str1[0: len("Actors")]:
-            dictionary['Actors'] = str2
-        elif "Director" == str1[0: len("Director")]:
-            dictionary['Director'] = str2
-        elif "Date First Available" == str1[0: len("Date First Available")]:
-            dictionary['Date First Available'] = str2
-
-    if dictionary['ASIN'] == "":
-        dictionary['ASIN'] = df.loc[lineNum, 'asin']
-
-
-    # style（风格）
-    styledata = soup.select("#wayfinding-breadcrumbs_feature_div > ul > li > span > a")
-    # print(styledata)
-    lenth = len(styledata)
-    # print(lenth)
-    tempstr = styledata[lenth - 1].get_text()
-    # print(tempstr.strip())
-    dictionary['style'] = styledata[lenth - 1].get_text().strip()
-
-    # 格式
-    versiondata = soup.select("#tmmSwatches > ul > li > span > span > span > a > span:nth-child(1)")
-    for item in versiondata:
-        # print(item.get_text())
-        dictionary['version'].append(item.get_text())
-
-    # 评论相关信息
-    reviewdata = soup.select("#cm-cr-dp-review-list > div")
-    reviews = []
-
-    count = 0
-    for item in reviewdata: # 循环读取评论
-        count += 1
-        if count > 5:
-            break
-
-        # print(item)
-        # print("\n\n\n\n\n")
-
-        reviewerid = item['id']
-        # print(item['id']) #id
-
-        reviewername = item.select("div > a > div.a-profile-content > span")[0].get_text()
-        # print(item.select("div > a > div.a-profile-content > span")[0].get_text()) # 用户名
-
-        helpfulstr = item.select(".a-size-base.a-color-tertiary.cr-vote-text")[0].get_text()
-        numhelpful = re.findall("\d+", helpfulstr)[0]
-        # print(helpfulstr)
-        # print(re.findall("\d+", helpfulstr)[0]) # 有帮助人数
-
-        starclass = item.select(".a-icon.a-icon-star")[0]['class'][2]
-        starnum = re.findall("\d+", starclass)[0]
-        # print(re.findall("\d+", starclass)[0]) # 星级
-
-        dateinfo = item.select(".a-color-secondary.review-date")[0].get_text()
-        # print(dateinfo) # 时间
-
-        summary = item.select(".a-color-base.review-title-content.a-text-bold > span")[0].get_text()
-        # print(summary) # 总结
-
-        text = item.select(".a-expander-partial-collapse-content > span")[0].get_text()
-        # print(text) # 评论text
-
-        reviewdic = {
-            'reviewerid': reviewerid,
-            'rewiewername': reviewername,
-            'helpfulnum': numhelpful,
-            'score': starnum,
-            'date': dateinfo,
-            'summary': summary,
-            'text': text
+            # 'director': soup.get('xxxxx'),
+            # .......
         }
-        # print(reviewdic)
-        reviews.append(reviewdic)
+        # ASIN /Actors /Director /Date First Available信息
+        uldata = soup.select("#detailBullets_feature_div > ul > li")
+        # uldata = soup.select(".a-unordered-list.a-nostyle.a-vertical.a-spacing-none.detail-bullet-list > li")
+        # print(uldata)
+        for index in range(len(uldata)):
+            str1 = uldata[index].select("li > span > span")[0].get_text()
+            str2 = uldata[index].select("li > span > span")[1].get_text()
+            # print(str1)
+            # print(str2)
+            if "ASIN" == str1[0: len("ASIN")]:
+                dictionary['ASIN'] = str2
+            elif "Actors" == str1[0: len("Actors")]:
+                dictionary['Actors'] = str2
+            elif "Director" == str1[0: len("Director")]:
+                dictionary['Director'] = str2
+            elif "Date First Available" == str1[0: len("Date First Available")]:
+                dictionary['Date First Available'] = str2
 
-        # dictionary['review'].append(reviewdic)
-        # print("end")
+        if dictionary['ASIN'] == "":
+            dictionary['ASIN'] = df.loc[lineNum, 'asin']
 
-    # print(reviews)
-    dictionary['reviews'] = reviews
-    jsonwriter.write(dictionary)
-    jsonwriter.close()
-    # 待完成
-    # 待完成
-    # 待完成
-    #
+        # style（风格）
+        styledata = soup.select("#wayfinding-breadcrumbs_feature_div > ul > li > span > a")
+        # print(styledata)
+        lenth = len(styledata)
+        # print(lenth)
+        tempstr = styledata[lenth - 1].get_text()
+        # print(tempstr.strip())
+        dictionary['style'] = styledata[lenth - 1].get_text().strip()
+
+        # 格式
+        versiondata = soup.select("#tmmSwatches > ul > li > span > span > span > a > span:nth-child(1)")
+        for item in versiondata:
+            # print(item.get_text())
+            dictionary['version'].append(item.get_text())
+
+        # 评论相关信息
+        reviewdata = soup.select("#cm-cr-dp-review-list > div")
+        reviews = []
+
+        count = 0
+        for item in reviewdata:  # 循环读取评论
+            count += 1
+            if count > 5:
+                break
+
+            # print(item)
+            # print("\n\n\n\n\n")
+
+            reviewerid = item['id']
+            # print(item['id']) #id
+
+            reviewername = item.select("div > a > div.a-profile-content > span")[0].get_text()
+            # print(item.select("div > a > div.a-profile-content > span")[0].get_text()) # 用户名
+
+            helpfulstr = item.select(".a-size-base.a-color-tertiary.cr-vote-text")
+            if len(helpfulstr) == 0:# 有的评论下面没有有帮助text
+                numhelpful = 0
+            else:
+                helpfulstr = helpfulstr[0].get_text()
+                numhelpful = re.findall("\d+", helpfulstr) # 当只有一个人时 显示的数字是“one”
+                if len(numhelpful) == 0:
+                    numhelpful = 1
+                else:
+                    numhelpful = numhelpful[0]
+
+            # print(helpfulstr)
+            # print(re.findall("\d+", helpfulstr)[0]) # 有帮助人数
+
+            starclass = item.select(".a-icon.a-icon-star")[0]['class'][2]
+            starnum = re.findall("\d+", starclass)[0]
+            # print(re.findall("\d+", starclass)[0]) # 星级
+
+            dateinfo = item.select(".a-color-secondary.review-date")[0].get_text()
+            # print(dateinfo) # 时间
+
+            summary = item.select(".a-color-base.review-title-content.a-text-bold > span")[0].get_text()
+            # print(summary) # 总结
+
+            text = item.select(".a-expander-partial-collapse-content > span")[0].get_text()
+            # print(text) # 评论text
+
+            reviewdic = {
+                'reviewerid': reviewerid,
+                'rewiewername': reviewername,
+                'helpfulnum': numhelpful,
+                'score': starnum,
+                'date': dateinfo,
+                'summary': summary,
+                'text': text
+            }
+            # print(reviewdic)
+            reviews.append(reviewdic)
+
+            # dictionary['review'].append(reviewdic)
+            # print("end")
+
+        # print(reviews)
+        dictionary['reviews'] = reviews
+        jsonwriter.write(dictionary)
+        jsonwriter.close()
+        # 待完成
+        # 待完成
+        # 待完成
+        #
+
 
     global tol_attempts, success_attempts
     print(tol_attempts, success_attempts, 'suc_rate:', success_attempts / tol_attempts)
@@ -215,19 +238,33 @@ def download_one_page(url, lineNum):
         tol_attempts = 0
 
 
+def executor_callback(worker):
+    logger.info("called worker callback function")
+    worker_exception = worker.exception()
+    if worker_exception:
+        logger.exception("Worker return exception: {}".format(worker_exception))
+
 if __name__ == '__main__':
 
+    # 使用线程池
     asinFile = open("newAsin.csv")
     reader = csv.reader(asinFile)
     # 创建线程池
-    with ThreadPoolExecutor(5) as t:
+    with ThreadPoolExecutor(8) as t:
         for item in reader:
-            if reader.line_num == 1:
+            if reader.line_num < 100:
                 continue
-
+            if reader.line_num > 1000:
+                break
             url = 'https://www.amazon.com/dp/' + item[0]
-            t.submit(download_one_page, url, reader.line_num)
-
+            future = t.submit(download_one_page, url, reader.line_num)
+            future.add_done_callback(executor_callback)
+            print(future.exception())
+        t.shutdown()
     asinFile.close()
 
+
+
     print("全部下载完毕!")
+
+
