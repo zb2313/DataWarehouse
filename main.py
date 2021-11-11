@@ -139,7 +139,7 @@ def download_one_page(url, lineNum):
                 dictionary['Date First Available'] = str2
 
         if dictionary['ASIN'] == "":
-            dictionary['ASIN'] = df.loc[lineNum, 'asin']
+            dictionary['ASIN'] = url[26:36]
 
         # style（风格）
         styledata = soup.select("#wayfinding-breadcrumbs_feature_div > ul > li > span > a")
