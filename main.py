@@ -43,7 +43,7 @@ web_header = {
 #     {'https': 'https://190.93.189.102:8080'},
 #
 # ]
-
+# 第一种代理
 #def get_proxy():
   #  return requests.get("http://127.0.0.1:5010/get").json()
 
@@ -55,10 +55,14 @@ def getStrHtml(url):
     try:
         global tol_attempts  # 总的尝试次数
         tol_attempts += 1
-
+        # 第二种代理
+        # proxypool_url = 'http://127.0.0.1:5555/random'
+        # proxy=requests.get(proxypool_url).text.strip()
+        # proxies = {'http': 'http://' + proxy}
         # print(proxy)
         # proxy = random.choice(proxy_list)
-        strhtml = requests.get(url, headers=web_header, cookies=cookies)
+        trhtml = requests.get(url, headers=web_header, cookies=cookies)
+        # strhtml = requests.get(url, headers=web_header, cookies=cookies,proxies=proxies)
         # strhtml = requests.get(url, headers=web_header, cookies=cookies, proxies={"http": "http://{}".format(proxy)})
         # print(strhtml.status_code)
         soup = BeautifulSoup(strhtml.text, 'lxml')
@@ -284,9 +288,9 @@ if __name__ == '__main__':
     # 创建线程池
     with ThreadPoolExecutor(8) as t:
         for item in reader:
-            if reader.line_num < 6000:
+            if reader.line_num < 6500:
                 continue
-            if reader.line_num > 6500:
+            if reader.line_num > 7000:
                 break
             url = 'https://www.amazon.com/dp/' + item[0]
             future = t.submit(download_one_page, url, reader.line_num)
