@@ -5,12 +5,15 @@
 #
 #   使用方法：先运行get_asins.py生成爬取记录表 newAsin.csv
 #   接着运行本文件
+#   运行后使用recordAsin.py记录下爬取的movie asin号（记录在newAsin.csv中）
 
 import csv
 import logging
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
+
+import eventlet
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -25,6 +28,7 @@ long_sleep_time = 60 * 3
 tol_attempts = 0  # 某段时间总尝试次数
 success_attempts = 0  # 该段时间内的成功次数
 cookies = {}
+df = pd.read_csv('newAsin.csv')  # 存储是否被爬取的记录
 
 web_header = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36',
@@ -44,11 +48,11 @@ web_header = {
 #
 # ]
 # 第一种代理
-#def get_proxy():
-  #  return requests.get("http://127.0.0.1:5010/get").json()
+# def get_proxy():
+   # return requests.get("http://127.0.0.1:5010/get").json()
 
 
-#proxy = get_proxy().get("proxy")
+# proxy = get_proxy().get("proxy")
 
 
 def getStrHtml(url):
@@ -62,7 +66,6 @@ def getStrHtml(url):
         # print(proxy)
         # proxy = random.choice(proxy_list)
         strhtml = requests.get(url, headers=web_header, cookies=cookies)
-        # strhtml = requests.get(url, headers=web_header, cookies=cookies,proxies=proxies)
         # strhtml = requests.get(url, headers=web_header, cookies=cookies, proxies={"http": "http://{}".format(proxy)})
         # print(strhtml.status_code)
         soup = BeautifulSoup(strhtml.text, 'lxml')
@@ -100,8 +103,6 @@ def getStrHtml(url):
 
 def download_one_page(url, lineNum):
     # print(lineNum)
-
-    df = pd.read_csv('newAsin.csv')  # 存储是否被爬取的记录
     jsonwriter = jsonlines.open("movie.json", "a")
     # 如果已经被写入，则直接跳过
     if df.loc[lineNum, 'isGot'] == 1:
@@ -114,13 +115,13 @@ def download_one_page(url, lineNum):
         if attempts == 5:
             break
         time.sleep(sleep_time)
-        # with eventlet.Timeout(10, False):
-        soup = getStrHtml(url)
+        with eventlet.Timeout(20, False):
+            soup = getStrHtml(url)
 
     # 爬取成功后记录已爬取信息
-    if soup != -1:
-        df.loc[lineNum, 'isGot'] = 1
-        df.to_csv("newAsin.csv", index=False)
+    # if soup != -1:
+    #     df.loc[lineNum, 'isGot'] = 1
+    #     df.to_csv("newAsin.csv", index=False)
 
     # 获取到信息了才去选择
     if type(soup) != int:
@@ -160,18 +161,16 @@ def download_one_page(url, lineNum):
             dictionary['Director'] = []
             personCareers = soup.select("#bylineInfo > span > span > span")
             personNames = soup.select("#bylineInfo > span > a.a-link-normal")
-            print(personCareers)
-            print(personNames)
-            print(len(personCareers), len(personNames))
+            # print(personCareers)
+            # print(personNames)
+            # print(len(personCareers), len(personNames))
             for index in range(len(personCareers)):
                 if "Actor" in personCareers[index].get_text():
                     dictionary['Actors'].append(personNames[index].get_text())
-                    print(personNames[index].get_text())
                 elif "Director" in personCareers[index].get_text():
                     dictionary['Director'].append(personNames[index].get_text())
-                    print(personNames[index].get_text())
                 else:
-                    print("")
+                    print("EOROR")
 
         if dictionary['ASIN'] == "":
             dictionary['ASIN'] = url[26:36]
@@ -200,10 +199,6 @@ def download_one_page(url, lineNum):
             count += 1
             if count > 5:
                 break
-
-            # print(item)
-            # print("\n\n\n\n\n")
-
             reviewerid = item['id']
             # print(item['id']) #id
 
@@ -250,8 +245,6 @@ def download_one_page(url, lineNum):
             reviews.append(reviewdic)
 
             # dictionary['review'].append(reviewdic)
-            # print("end")
-
         # print(reviews)
         dictionary['reviews'] = reviews
         jsonwriter.write(dictionary)
@@ -267,7 +260,6 @@ def download_one_page(url, lineNum):
         time.sleep(long_sleep_time)
         # global proxy
         # proxy = get_proxy().get("proxy")
-
         success_attempts = 0  # 重置计数
         tol_attempts = 0
     if tol_attempts > 100:  # 每一百次尝试重置一次计数
@@ -290,9 +282,9 @@ if __name__ == '__main__':
     # 创建线程池
     with ThreadPoolExecutor(8) as t:
         for item in reader:
-            if reader.line_num < 6500:
+            if reader.line_num < 9500:
                 continue
-            if reader.line_num > 7000:
+            if reader.line_num > 10500:
                 break
             url = 'https://www.amazon.com/dp/' + item[0]
             future = t.submit(download_one_page, url, reader.line_num)
@@ -303,6 +295,4 @@ if __name__ == '__main__':
 
     print("全部下载完毕!")
 
-    # 550
-    # 2000 -4000
-    # 1100
+# 19：50 8000 - 9000
