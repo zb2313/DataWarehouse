@@ -137,6 +137,8 @@ def download_one_page(url, lineNum):
         }
         # ASIN /Actors /Director /Date First Available信息
         uldata = soup.select("#detailBullets_feature_div > ul > li")
+        #name=str(soup.select("#productTitle")).replace("\n","")[70:].replace("</span>]","")
+        #print("Name",name,len(name))
         # print(uldata)
         # 因为爬取到的页面有两种类型 对于非导演、演员相关属性，可以采用相同方法选择，但对于导演、演员这些属性，需要有两种方式处理
         if len(uldata) != 0: # 能够以通常方法爬取时
