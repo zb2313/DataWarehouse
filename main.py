@@ -103,7 +103,6 @@ def getStrHtml(url):
 
 def download_one_page(url, lineNum):
     # print(lineNum)
-    df = pd.read_csv('newAsin.csv')  # 存储是否被爬取的记录
     jsonwriter = jsonlines.open("movie.json", "a")
     # 如果已经被写入，则直接跳过
     if df.loc[lineNum, 'isGot'] == 1:
@@ -116,12 +115,13 @@ def download_one_page(url, lineNum):
         if attempts == 5:
             break
         time.sleep(sleep_time)
-        soup = getStrHtml(url)
+        with eventlet.Timeout(20, False):
+            soup = getStrHtml(url)
 
     # 爬取成功后记录已爬取信息
-    if soup != -1:
-        df.loc[lineNum, 'isGot'] = 1
-        df.to_csv("newAsin.csv", index=False)
+    # if soup != -1:
+    #     df.loc[lineNum, 'isGot'] = 1
+    #     df.to_csv("newAsin.csv", index=False)
 
     # 获取到信息了才去选择
     if type(soup) != int:
@@ -137,14 +137,16 @@ def download_one_page(url, lineNum):
             'reviews': [],
             # .......
         }
-        # ASIN /Actors /Director /Date First Available信息
-        uldata = soup.select("#detailBullets_feature_div > ul > li")
+
         name = str(soup.select("#productTitle")).replace("\n", "")[71:].replace("</span>]", "").replace("VHS", "")
         dictionary['Title'] = name
         # print("Name",name)
+
+        # ASIN /Actors /Director /Date First Available信息
+        uldata = soup.select("#detailBullets_feature_div > ul > li")
         # print(uldata)
         # 因为爬取到的页面有两种类型 对于非导演、演员相关属性，可以采用相同方法选择，但对于导演、演员这些属性，需要有两种方式处理
-        if len(uldata) != 0:  # 能够以通常方法爬取时
+        if len(uldata) != 0: # 能够以通常方法爬取时
             for index in range(len(uldata)):
                 str1 = uldata[index].select("li > span > span")[0].get_text()
                 str2 = uldata[index].select("li > span > span")[1].get_text()
@@ -158,7 +160,7 @@ def download_one_page(url, lineNum):
                     dictionary['Director'] = str2
                 elif "Date First Available" == str1[0: len("Date First Available")]:
                     dictionary['Date First Available'] = str2
-        else:  # 如果是另一种页面时
+        else: # 如果是另一种页面时
             dictionary['Actors'] = []
             dictionary['Director'] = []
             personCareers = soup.select("#bylineInfo > span > span > span")
@@ -284,9 +286,9 @@ if __name__ == '__main__':
     # 创建线程池
     with ThreadPoolExecutor(8) as t:
         for item in reader:
-            if reader.line_num < 6500:
+            if reader.line_num < 9500:
                 continue
-            if reader.line_num > 7000:
+            if reader.line_num > 10500:
                 break
             url = 'https://www.amazon.com/dp/' + item[0]
             future = t.submit(download_one_page, url, reader.line_num)
