@@ -48,11 +48,11 @@ web_header = {
 #
 # ]
 # 第一种代理
-# def get_proxy():
-# return requests.get("http://127.0.0.1:5010/get").json()
+def get_proxy():
+  return requests.get("http://127.0.0.1:5010/get").json()
 
 
-# proxy = get_proxy().get("proxy")
+proxy = get_proxy().get("proxy")
 
 
 def getStrHtml(url):
@@ -63,10 +63,10 @@ def getStrHtml(url):
         # proxypool_url = 'http://127.0.0.1:5555/random'
         # proxy=requests.get(proxypool_url).text.strip()
         # proxies = {'http': 'http://' + proxy}
-        # print(proxy)
+        print(proxy)
         # proxy = random.choice(proxy_list)
-        strhtml = requests.get(url, headers=web_header, cookies=cookies)
-        # strhtml = requests.get(url, headers=web_header, cookies=cookies, proxies={"http": "http://{}".format(proxy)})
+        #strhtml = requests.get(url, headers=web_header, cookies=cookies)
+        strhtml = requests.get(url, headers=web_header, cookies=cookies, proxies={"http": "http://{}".format(proxy)})
         # print(strhtml.status_code)
         soup = BeautifulSoup(strhtml.text, 'lxml')
         movie_title = str(soup.select('title')[0].getText())
@@ -105,7 +105,8 @@ def download_one_page(url, lineNum):
     # print(lineNum)
     jsonwriter = jsonlines.open("movie.json", "a")
     # 如果已经被写入，则直接跳过
-    if df.loc[lineNum, 'isGot'] == 1:
+    # print(lineNum, url[26:36])
+    if df.loc[lineNum - 2, 'isGot'] == 1:
         return
 
     soup = getStrHtml(url)  # 尝试一次
@@ -122,6 +123,14 @@ def download_one_page(url, lineNum):
     # if soup != -1:
     #     df.loc[lineNum, 'isGot'] = 1
     #     df.to_csv("newAsin.csv", index=False)
+
+    if soup == 0:# 记录不是movie 但是已经爬去取过
+        dictionary = {
+            'ASIN': url[26:36],
+            'isMovie': False,
+        }
+        jsonwriter.write(dictionary)
+        jsonwriter.close()
 
     # 获取到信息了才去选择
     if type(soup) != int:
@@ -261,9 +270,9 @@ def download_one_page(url, lineNum):
     global tol_attempts, success_attempts
     print(tol_attempts, success_attempts, 'suc_rate:', success_attempts / tol_attempts)
     if success_attempts / tol_attempts < 0.30:  # 成功率低于0.2的话休息2分钟
-        time.sleep(long_sleep_time)
-        # global proxy
-        # proxy = get_proxy().get("proxy")
+        #time.sleep(long_sleep_time)
+        global proxy
+        proxy = get_proxy().get("proxy")
         success_attempts = 0  # 重置计数
         tol_attempts = 0
     if tol_attempts > 100:  # 每一百次尝试重置一次计数
