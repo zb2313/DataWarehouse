@@ -61,7 +61,7 @@ def getStrHtml(url):
         # proxies = {'http': 'http://' + proxy}
         # print(proxy)
         # proxy = random.choice(proxy_list)
-        trhtml = requests.get(url, headers=web_header, cookies=cookies)
+        strhtml = requests.get(url, headers=web_header, cookies=cookies)
         # strhtml = requests.get(url, headers=web_header, cookies=cookies,proxies=proxies)
         # strhtml = requests.get(url, headers=web_header, cookies=cookies, proxies={"http": "http://{}".format(proxy)})
         # print(strhtml.status_code)
