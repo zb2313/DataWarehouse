@@ -65,7 +65,7 @@ def getStrHtml(url):
         # proxies = {'http': 'http://' + proxy}
         # print(proxy)
         # proxy = random.choice(proxy_list)
-        # strhtml = requests.get(url, headers=web_header, cookies=cookies)
+        strhtml = requests.get(url, headers=web_header, cookies=cookies)
         # strhtml = requests.get(url, headers=web_header, cookies=cookies, proxies={"http": "http://{}".format(proxy)})
         # print(strhtml.status_code)
         soup = BeautifulSoup(strhtml.text, 'lxml')
