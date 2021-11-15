@@ -155,7 +155,8 @@ def download_one_page(url, lineNum):
         dictionary['IMDB grade'] = imdb_grade
 
         date = str(soup.select("#declarative_ .dp-title-col .title-text>span")[2])[40:-7]
-        print(date)
+        dictionary['Date First Available'] = date
+        
         # ASIN /Actors /Director /Date First Available信息
         uldata = soup.select("#detailBullets_feature_div > ul > li")
         # print(uldata)
