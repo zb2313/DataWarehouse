@@ -156,40 +156,35 @@ def download_one_page(url, lineNum):
 
         date = str(soup.select("#declarative_ .dp-title-col .title-text>span")[2])[40:-7]
         dictionary['Date First Available'] = date
-        
         # ASIN /Actors /Director /Date First Available信息
-        uldata = soup.select("#detailBullets_feature_div > ul > li")
+        #uldata = soup.select("#detailBullets_feature_div > ul > li")
         # print(uldata)
         # 因为爬取到的页面有两种类型 对于非导演、演员相关属性，可以采用相同方法选择，但对于导演、演员这些属性，需要有两种方式处理
-        if len(uldata) != 0:  # 能够以通常方法爬取时
-            for index in range(len(uldata)):
-                str1 = uldata[index].select("li > span > span")[0].get_text()
-                str2 = uldata[index].select("li > span > span")[1].get_text()
-                # print(str1)
-                # print(str2)
-                if "ASIN" == str1[0: len("ASIN")]:
-                    dictionary['ASIN'] = str2
-                elif "Actors" == str1[0: len("Actors")]:
-                    dictionary['Actors'] = str2
-                elif "Director" == str1[0: len("Director")]:
-                    dictionary['Director'] = str2
-                # elif "Date First Available" == str1[0: len("Date First Available")]:
-                #    dictionary['Date First Available'] = str2
-        else:  # 如果是另一种页面时
-            dictionary['Actors'] = []
-            dictionary['Director'] = []
-            personCareers = soup.select("#bylineInfo > span > span > span")
-            personNames = soup.select("#bylineInfo > span > a.a-link-normal")
-            # print(personCareers)
-            # print(personNames)
-            # print(len(personCareers), len(personNames))
-            for index in range(len(personCareers)):
-                if "Actor" in personCareers[index].get_text():
-                    dictionary['Actors'].append(personNames[index].get_text())
-                elif "Director" in personCareers[index].get_text():
-                    dictionary['Director'].append(personNames[index].get_text())
-                else:
-                    print("EOROR")
+        # if len(uldata) != 0:  # 能够以通常方法爬取时
+        #     for index in range(len(uldata)):
+        #         str1 = uldata[index].select("li > span > span")[0].get_text()
+        #         str2 = uldata[index].select("li > span > span")[1].get_text()
+        #         # print(str1)
+        #         # print(str2)
+        #         if "ASIN" == str1[0: len("ASIN")]:
+        #             dictionary['ASIN'] = str2
+        #         elif "Actors" == str1[0: len("Actors")]:
+        #             dictionary['Actors'] = str2
+        #         elif "Director" == str1[0: len("Director")]:
+        #             dictionary['Director'] = str2
+        # else:  # 如果是另一种页面时
+        dictionary['Actors'] = []
+        dictionary['Director'] = []
+        person_careers = soup.select("#bylineInfo > span > span > span")
+        person_names = soup.select("#bylineInfo > span > a.a-link-normal")
+
+        for index in range(len(person_careers)):
+            if "Actor" in person_careers[index].get_text():
+                dictionary['Actors'].append(person_names[index].get_text())
+            elif "Director" in person_careers[index].get_text():
+                dictionary['Director'].append(person_names[index].get_text())
+            else:
+                print("ERROR")
 
         if dictionary['ASIN'] == "":
             dictionary['ASIN'] = url[26:36]
@@ -266,6 +261,7 @@ def download_one_page(url, lineNum):
             # dictionary['review'].append(reviewdic)
         # print(reviews)
         dictionary['reviews'] = reviews
+        print(dictionary)
         #jsonwriter.write(dictionary)
         jsonwriter.close()
         # 待完成
