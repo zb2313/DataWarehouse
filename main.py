@@ -49,7 +49,7 @@ web_header = {
 # ]
 # 第一种代理
 def get_proxy():
-  return requests.get("http://127.0.0.1:5010/get").json()
+    return requests.get("http://127.0.0.1:5010/get").json()
 
 
 proxy = get_proxy().get("proxy")
@@ -63,18 +63,18 @@ def getStrHtml(url):
         # proxypool_url = 'http://127.0.0.1:5555/random'
         # proxy=requests.get(proxypool_url).text.strip()
         # proxies = {'http': 'http://' + proxy}
-        print(proxy)
+        # print(proxy)
         # proxy = random.choice(proxy_list)
-        #strhtml = requests.get(url, headers=web_header, cookies=cookies)
+        # strhtml = requests.get(url, headers=web_header, cookies=cookies)
         strhtml = requests.get(url, headers=web_header, cookies=cookies, proxies={"http": "http://{}".format(proxy)})
         # print(strhtml.status_code)
         soup = BeautifulSoup(strhtml.text, 'lxml')
         movie_title = str(soup.select('title')[0].getText())
 
         if movie_title == "Amazon.com" or movie_title == "Sorry! Something went wrong!" or movie_title == 'Robot Check':
-            print(movie_title)
+            # print(movie_title)
             return -1
-        print(movie_title)
+        # print(movie_title)
 
         global success_attempts
         success_attempts += 1  # 成功的尝试次数
@@ -83,8 +83,8 @@ def getStrHtml(url):
         emptyData = soup.select('#cannotbefound')  # 创造一个空的data
 
         if data != emptyData:  # 判断是不是电影
-            print(url)
-            print("movie")
+            # print(url)
+            # print("movie")
 
             # f = open(url[26:36] + ".html", 'w', encoding='utf-8')
             # # str_content = strhtml.text.decode('utf-8')
@@ -93,8 +93,8 @@ def getStrHtml(url):
 
             return soup
         else:
-            print(url)
-            print("not movie")
+            # print(url)
+            # print("not movie")
             return 0
     except Exception as e:
         print('[error]', e)
@@ -124,7 +124,7 @@ def download_one_page(url, lineNum):
     #     df.loc[lineNum, 'isGot'] = 1
     #     df.to_csv("newAsin.csv", index=False)
 
-    if soup == 0:# 记录不是movie 但是已经爬去取过
+    if soup == 0:  # 记录不是movie 但是已经爬去取过
         dictionary = {
             'ASIN': url[26:36],
             'isMovie': False,
@@ -140,6 +140,7 @@ def download_one_page(url, lineNum):
             'Title': ' ',
             'Actors': '',
             'Director': '',
+            'IMDB grade': '',
             'Date First Available': '',
             'style': '',
             'version': [],
@@ -149,13 +150,17 @@ def download_one_page(url, lineNum):
 
         name = str(soup.select("#productTitle")).replace("\n", "")[71:].replace("</span>]", "").replace("VHS", "")
         dictionary['Title'] = name
-        # print("Name",name)
 
+        imdb_grade = float(str(soup.select("#imdbInfo_feature_div>span>strong"))[9:12])
+        dictionary['IMDB grade'] = imdb_grade
+
+        date = str(soup.select("#declarative_ .dp-title-col .title-text>span")[2])[40:-7]
+        print(date)
         # ASIN /Actors /Director /Date First Available信息
         uldata = soup.select("#detailBullets_feature_div > ul > li")
         # print(uldata)
         # 因为爬取到的页面有两种类型 对于非导演、演员相关属性，可以采用相同方法选择，但对于导演、演员这些属性，需要有两种方式处理
-        if len(uldata) != 0: # 能够以通常方法爬取时
+        if len(uldata) != 0:  # 能够以通常方法爬取时
             for index in range(len(uldata)):
                 str1 = uldata[index].select("li > span > span")[0].get_text()
                 str2 = uldata[index].select("li > span > span")[1].get_text()
@@ -167,9 +172,9 @@ def download_one_page(url, lineNum):
                     dictionary['Actors'] = str2
                 elif "Director" == str1[0: len("Director")]:
                     dictionary['Director'] = str2
-                elif "Date First Available" == str1[0: len("Date First Available")]:
-                    dictionary['Date First Available'] = str2
-        else: # 如果是另一种页面时
+                # elif "Date First Available" == str1[0: len("Date First Available")]:
+                #    dictionary['Date First Available'] = str2
+        else:  # 如果是另一种页面时
             dictionary['Actors'] = []
             dictionary['Director'] = []
             personCareers = soup.select("#bylineInfo > span > span > span")
@@ -260,7 +265,7 @@ def download_one_page(url, lineNum):
             # dictionary['review'].append(reviewdic)
         # print(reviews)
         dictionary['reviews'] = reviews
-        jsonwriter.write(dictionary)
+        #jsonwriter.write(dictionary)
         jsonwriter.close()
         # 待完成
         # 待完成
@@ -268,9 +273,9 @@ def download_one_page(url, lineNum):
         #
 
     global tol_attempts, success_attempts
-    print(tol_attempts, success_attempts, 'suc_rate:', success_attempts / tol_attempts)
+    # print(tol_attempts, success_attempts, 'suc_rate:', success_attempts / tol_attempts)
     if success_attempts / tol_attempts < 0.30:  # 成功率低于0.2的话休息2分钟
-        #time.sleep(long_sleep_time)
+        # time.sleep(long_sleep_time)
         global proxy
         proxy = get_proxy().get("proxy")
         success_attempts = 0  # 重置计数
@@ -295,13 +300,13 @@ if __name__ == '__main__':
     # 创建线程池
     with ThreadPoolExecutor(8) as t:
         for item in reader:
-            if reader.line_num < 9500:
+            if reader.line_num < 45000:
                 continue
-            if reader.line_num > 10500:
+            if reader.line_num > 60176:
                 break
             url = 'https://www.amazon.com/dp/' + item[0]
             future = t.submit(download_one_page, url, reader.line_num)
-            future.add_done_callback(executor_callback)
+            # future.add_done_callback(executor_callback)
             # print(future.exception())
         t.shutdown()
     asinFile.close()
