@@ -135,16 +135,18 @@ def download_one_page(url, lineNum):
             'reviews': [],
             # .......
         }
-
+        # ASIN /Actors /Director /Date First Available信息
         name = str(soup.select("#productTitle")).replace("\n", "")[71:].replace("</span>]", "").replace("VHS", "")
         dictionary['Title'] = name
 
         imdb_grade = float(str(soup.select("#imdbInfo_feature_div>span>strong"))[9:12])
         dictionary['IMDB grade'] = imdb_grade
 
-        date = str(soup.select("#declarative_ .dp-title-col .title-text>span")[2])[40:-7]
-        dictionary['Date First Available'] = date
-        # ASIN /Actors /Director /Date First Available信息
+        date_soup = soup.select("#declarative_ .dp-title-col .title-text>span")
+        if len(date_soup) != 0:
+            date = str(soup.select("#declarative_ .dp-title-col .title-text>span")[2])[40:-7]
+            dictionary['Date First Available'] = date
+
         person_careers = soup.select("#bylineInfo > span > span > span")
         person_names = soup.select("#bylineInfo > span > a.a-link-normal")
 
@@ -260,9 +262,9 @@ if __name__ == '__main__':
     # 创建线程池
     with ThreadPoolExecutor(8) as t:
         for item in reader:
-            if reader.line_num < 45000:
+            if reader.line_num < 2:
                 continue
-            if reader.line_num > 60176:
+            if reader.line_num > 15000:
                 break
             url = 'https://www.amazon.com/dp/' + item[0]
             future = t.submit(download_one_page, url, reader.line_num)
