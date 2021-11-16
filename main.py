@@ -143,7 +143,7 @@ def download_one_page(url, lineNum):
         dictionary['IMDB grade'] = imdb_grade
 
         date_soup = soup.select("#declarative_ .dp-title-col .title-text>span")
-        if len(date_soup) != 0:
+        if len(date_soup) >= 3:
             date = str(soup.select("#declarative_ .dp-title-col .title-text>span")[2])[40:-7]
             dictionary['Date First Available'] = date
 
