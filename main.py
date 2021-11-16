@@ -181,13 +181,10 @@ def download_one_page(url, lineNum):
         for index in range(len(person_careers)):
             if "Actor" in person_careers[index].get_text():
                 dictionary['Actors'].append(person_names[index].get_text())
-            elif "Director" in person_careers[index].get_text():
+            if "Director" in person_careers[index].get_text():
                 dictionary['Director'].append(person_names[index].get_text())
-            else:
-                print("ERROR")
 
-        if dictionary['ASIN'] == "":
-            dictionary['ASIN'] = url[26:36]
+        dictionary['ASIN'] = url[26:36]
 
         # style（风格）
         styledata = soup.select("#wayfinding-breadcrumbs_feature_div > ul > li > span > a")
@@ -303,7 +300,7 @@ if __name__ == '__main__':
                 break
             url = 'https://www.amazon.com/dp/' + item[0]
             future = t.submit(download_one_page, url, reader.line_num)
-            # future.add_done_callback(executor_callback)
+            future.add_done_callback(executor_callback)
             # print(future.exception())
         t.shutdown()
     asinFile.close()
