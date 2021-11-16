@@ -41,17 +41,9 @@ web_header = {
     'accept-encoding': 'gzip, deflate, br'
 }
 
-
-# proxy_list = [
-#
-#     {'https': 'https://190.93.189.102:8080'},
-#
-# ]
 # 第一种代理
 def get_proxy():
     return requests.get("http://127.0.0.1:5010/get").json()
-
-
 proxy = get_proxy().get("proxy")
 
 
@@ -72,9 +64,9 @@ def getStrHtml(url):
         movie_title = str(soup.select('title')[0].getText())
 
         if movie_title == "Amazon.com" or movie_title == "Sorry! Something went wrong!" or movie_title == 'Robot Check':
-            # print(movie_title)
+            print(movie_title)
             return -1
-        # print(movie_title)
+        print(movie_title)
 
         global success_attempts
         success_attempts += 1  # 成功的尝试次数
@@ -83,9 +75,10 @@ def getStrHtml(url):
         emptyData = soup.select('#cannotbefound')  # 创造一个空的data
 
         if data != emptyData:  # 判断是不是电影
-            # print(url)
-            # print("movie")
+            print(url)
+            print("movie")
 
+            # 将页面写入一个.html，用来debug
             # f = open(url[26:36] + ".html", 'w', encoding='utf-8')
             # # str_content = strhtml.text.decode('utf-8')
             # f.write(strhtml.text)
@@ -93,8 +86,8 @@ def getStrHtml(url):
 
             return soup
         else:
-            # print(url)
-            # print("not movie")
+            print(url)
+            print("not movie")
             return 0
     except Exception as e:
         print('[error]', e)
@@ -119,11 +112,6 @@ def download_one_page(url, lineNum):
         with eventlet.Timeout(20, False):
             soup = getStrHtml(url)
 
-    # 爬取成功后记录已爬取信息
-    # if soup != -1:
-    #     df.loc[lineNum, 'isGot'] = 1
-    #     df.to_csv("newAsin.csv", index=False)
-
     if soup == 0:  # 记录不是movie 但是已经爬去取过
         dictionary = {
             'ASIN': url[26:36],
@@ -138,8 +126,8 @@ def download_one_page(url, lineNum):
         dictionary = {
             'ASIN': '',
             'Title': ' ',
-            'Actors': '',
-            'Director': '',
+            'Actors': [],
+            'Director': [],
             'IMDB grade': '',
             'Date First Available': '',
             'style': '',
@@ -157,37 +145,16 @@ def download_one_page(url, lineNum):
         date = str(soup.select("#declarative_ .dp-title-col .title-text>span")[2])[40:-7]
         dictionary['Date First Available'] = date
         # ASIN /Actors /Director /Date First Available信息
-        #uldata = soup.select("#detailBullets_feature_div > ul > li")
-        # print(uldata)
-        # 因为爬取到的页面有两种类型 对于非导演、演员相关属性，可以采用相同方法选择，但对于导演、演员这些属性，需要有两种方式处理
-        # if len(uldata) != 0:  # 能够以通常方法爬取时
-        #     for index in range(len(uldata)):
-        #         str1 = uldata[index].select("li > span > span")[0].get_text()
-        #         str2 = uldata[index].select("li > span > span")[1].get_text()
-        #         # print(str1)
-        #         # print(str2)
-        #         if "ASIN" == str1[0: len("ASIN")]:
-        #             dictionary['ASIN'] = str2
-        #         elif "Actors" == str1[0: len("Actors")]:
-        #             dictionary['Actors'] = str2
-        #         elif "Director" == str1[0: len("Director")]:
-        #             dictionary['Director'] = str2
-        # else:  # 如果是另一种页面时
-        dictionary['Actors'] = []
-        dictionary['Director'] = []
         person_careers = soup.select("#bylineInfo > span > span > span")
         person_names = soup.select("#bylineInfo > span > a.a-link-normal")
 
         for index in range(len(person_careers)):
             if "Actor" in person_careers[index].get_text():
                 dictionary['Actors'].append(person_names[index].get_text())
-            elif "Director" in person_careers[index].get_text():
+            if "Director" in person_careers[index].get_text():
                 dictionary['Director'].append(person_names[index].get_text())
-            else:
-                print("ERROR")
 
-        if dictionary['ASIN'] == "":
-            dictionary['ASIN'] = url[26:36]
+        dictionary['ASIN'] = url[26:36]
 
         # style（风格）
         styledata = soup.select("#wayfinding-breadcrumbs_feature_div > ul > li > span > a")
@@ -261,16 +228,13 @@ def download_one_page(url, lineNum):
             # dictionary['review'].append(reviewdic)
         # print(reviews)
         dictionary['reviews'] = reviews
-        print(dictionary)
-        #jsonwriter.write(dictionary)
+        # print(dictionary)
+        jsonwriter.write(dictionary)
         jsonwriter.close()
-        # 待完成
-        # 待完成
-        # 待完成
-        #
 
+    # 成功率计算部分
     global tol_attempts, success_attempts
-    # print(tol_attempts, success_attempts, 'suc_rate:', success_attempts / tol_attempts)
+    print(tol_attempts, success_attempts, 'suc_rate:', success_attempts / tol_attempts)
     if success_attempts / tol_attempts < 0.30:  # 成功率低于0.2的话休息2分钟
         # time.sleep(long_sleep_time)
         global proxy
@@ -290,7 +254,6 @@ def executor_callback(worker):
 
 
 if __name__ == '__main__':
-
     # 使用线程池
     asinFile = open("newAsin.csv")
     reader = csv.reader(asinFile)
@@ -303,11 +266,10 @@ if __name__ == '__main__':
                 break
             url = 'https://www.amazon.com/dp/' + item[0]
             future = t.submit(download_one_page, url, reader.line_num)
-            # future.add_done_callback(executor_callback)
+            future.add_done_callback(executor_callback)
             # print(future.exception())
         t.shutdown()
     asinFile.close()
 
     print("全部下载完毕!")
 
-# 19：50 8000 - 9000
