@@ -208,6 +208,38 @@ for item in jsonlines.Reader(movies):
             dw_mysqldb.rollback()
 
     # div_director, bridge_direct
+    directors = item['Director']
+    for director in directors:
+        director_id = None
+        sql_select_director = "SELECT director_id FROM div_director WHERE director_name = %s;"
+        sql_insert_director = "INSERT INTO div_director(director_name, movie_name)" \
+                              "VALUES (%s, %s);"
+        sql_update_director = "UPDATE div_director SET movie_name = CONCAT(movie_name, ',', %s) WHERE director_name = %s;"
+
+        try:
+            cursor.execute(sql_select_director, [director])
+            if cursor.rowcount == 0:
+                cursor.execute(sql_insert_director, [director, title])
+                dw_mysqldb.commit()
+            else:
+                cursor.execute(sql_update_director, [title, director])
+                dw_mysqldb.commit()
+            cursor.execute(sql_select_director, [director])
+            director_id = cursor.fetchone()[0]
+            print("director_id", director_id)
+        except Exception as e:
+            print(e)
+            dw_mysqldb.rollback()
+
+        # 存入bridge 联系表
+        sql_insert_bridge_direct = "INSERT INTO bridge_direct(asin, director_id)" \
+                                   "VALUES (%s, %s);"
+        try:
+            cursor.execute(sql_insert_bridge_direct, [asin, director_id])
+            dw_mysqldb.commit()
+        except Exception as e:
+            print(e)
+            dw_mysqldb.rollback()
 
 
 cursor.close()
