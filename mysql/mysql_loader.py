@@ -27,23 +27,44 @@ cursor = dw_mysqldb.cursor()
 #     print(e)
 #     dw_mysqldb.rollback()
 
-MONTHS = ["January", "February", "March", "April", "May",
-          "June", "July", "August", "September", "October", "November"
-                                                            "December", ]
+MONTHS = ["January", "February", "March", "April", "May", "June", "July",
+          "August", "September", "October", "November", "December", ]
 
 movies = open("../movies.json", "r", encoding="UTF-8")
 
 count = 1
 
 for item in jsonlines.Reader(movies):
-    count += 1
-    if count > 10:
-        break
+    # count += 1
+    # if count < 2000:
+    #     continue
+    # elif count > 2200:
+    #     break
+
+    print(item['ASIN'])
+    # 这里主要是防止重复录入的策略
+    sql_select_asin = "SELECT asin FROM fact_movie WHERE asin = %s;"
+    sql_select_review_id = "SELECT review_id FROM div_review WHERE review_id = %s;"
+    try:
+        cursor.execute(sql_select_asin, [item['ASIN']])
+        # 如果存在记录的电影的的话，本条直接退出
+        if cursor.rowcount != 0:
+            print("pass here")
+            continue
+        # 可能存在同一个商品的不同页面情况，这种情况需要跳过
+        if len(item['reviews']) != 0:
+            cursor.excute(sql_select_review_id, [item['reviews'][0]['reviewerid']])
+            if cursor.rowcount != 0:
+                continue
+    except Exception as e:
+        print(e)
+        dw_mysqldb.rollback()
 
     # div_time table
     time_info = item['Date First Available']
-    if len(time_info) < 3:
+    if len(time_info) != 3:
         print("no date error")
+        continue
     time_key = None
     year = int(time_info[2])
     month = MONTHS.index(time_info[0]) + 1
@@ -192,7 +213,7 @@ for item in jsonlines.Reader(movies):
                 dw_mysqldb.commit()
             cursor.execute(sql_select_actor, [actor])
             actor_id = cursor.fetchone()[0]
-            print("actor_id", actor_id)
+            # print("actor_id", actor_id)
         except Exception as e:
             print(e)
             dw_mysqldb.rollback()
@@ -226,7 +247,7 @@ for item in jsonlines.Reader(movies):
                 dw_mysqldb.commit()
             cursor.execute(sql_select_director, [director])
             director_id = cursor.fetchone()[0]
-            print("director_id", director_id)
+            # print("director_id", director_id)
         except Exception as e:
             print(e)
             dw_mysqldb.rollback()
@@ -240,7 +261,6 @@ for item in jsonlines.Reader(movies):
         except Exception as e:
             print(e)
             dw_mysqldb.rollback()
-
 
 cursor.close()
 dw_mysqldb.close()
