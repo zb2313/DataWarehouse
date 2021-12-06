@@ -30,6 +30,7 @@ def is_same_series(str1, str2):
             similarity *= length / 6
         # 降低相差较大的出现概率
         similarity *= 1 - (abs(len(str1) - len(str2)) / (len(str1) + len(str2)))
+        # print(similarity)
         if similarity > 0.29:
             return similarity
             print(str1, str2)
@@ -40,6 +41,7 @@ def is_same_series(str1, str2):
 
 # 数据库连接
 dw_mysqldb = pymysql.connect(
+    # host='139.196.202.57',
     host='127.0.0.1',
     user='dataWarehouseAdm',
     password='dataWarehouse_123',
@@ -184,11 +186,12 @@ for item in jsonlines.Reader(movies):
         series_name_similarity = 0
         for name in movie_series_names:
             # 如果当前的电影名称和某一个系列名称相似 找到最大的相似度
-            if is_same_series(name, item['Title']) > series_name_similarity:
-                print(is_same_series(name, item['Title']))
-                series_name_similarity = is_same_series(name, item['Title'])
-                series_name = name  # 设置当前系列的名称
+            if is_same_series(name[0], item['Title']) > series_name_similarity:
+                # print(is_same_series(name[0], item['Title']))
+                series_name_similarity = is_same_series(name[0], item['Title'])
+                series_name = name[0]  # 设置当前系列的名称
         print(item['Title'], series_name)
+        print(series_name_similarity)
         # 如果都没有相似的，自己即成为一个系列
         if series_name_similarity == 0:
             series_name = item['Title']
@@ -219,7 +222,10 @@ for item in jsonlines.Reader(movies):
         print("style_key error")
     directors_name = ','.join(item['Director'])
     actors_name = ','.join(item['Actors'])
-    review_point = item['ReviewPoint']
+    if 'ReviewPoint' in item:
+        review_point = item['ReviewPoint']
+    else:
+        review_point = 0
 
     sql_insert_movie = "INSERT INTO fact_movie(asin, movie_series_id, title, product_version, imdb_score, " \
                        "time_key, style_key, directors_name, actors_name, review_point)" \
@@ -240,15 +246,16 @@ for item in jsonlines.Reader(movies):
         reviewer_name = review['rewiewername']
         helpful_num = review['helpfulnum']
         score = review['score']
+        sentiment = review['sentiment']
         date = review['date']
         summary = review['summary']
         text = review['text']
         sql_insert_review = "INSERT INTO div_review(review_id, asin, reviewer_name, helpful_num," \
-                            "score, date, summary, text)" \
-                            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
+                            "score, sentiment, date, summary, text)" \
+                            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
         try:
             cursor.execute(sql_insert_review, [review_id, asin, reviewer_name,
-                                               helpful_num, score, date, summary, text])
+                                               helpful_num, score, sentiment, date, summary, text])
         except Exception as e:
             print(e)
             dw_mysqldb.rollback()
