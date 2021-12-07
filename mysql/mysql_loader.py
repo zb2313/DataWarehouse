@@ -214,14 +214,14 @@ for item in jsonlines.Reader(movies):
     if movie_series_id is None:
         print("movie_series_id error")
     title = item['Title']
-    product_version = ','.join(item['version'])
+    product_version = '$'.join(item['version'])
     imdb_score = item['IMDB grade']
     if time_key is None:
         print("time_key error")
     if style_key is None:
         print("style_key error")
-    directors_name = ','.join(item['Director'])
-    actors_name = ','.join(item['Actors'])
+    directors_name = '$'.join(item['Director'])
+    actors_name = '$'.join(item['Actors'])
     if 'ReviewPoint' in item:
         review_point = item['ReviewPoint']
     else:
@@ -301,7 +301,7 @@ for item in jsonlines.Reader(movies):
         sql_select_director = "SELECT director_id FROM div_director WHERE director_name = %s;"
         sql_insert_director = "INSERT INTO div_director(director_name, movie_name)" \
                               "VALUES (%s, %s);"
-        sql_update_director = "UPDATE div_director SET movie_name = CONCAT(movie_name, ',', %s) WHERE director_name = %s;"
+        sql_update_director = "UPDATE div_director SET movie_name = CONCAT(movie_name, '$', %s) WHERE director_name = %s;"
 
         try:
             cursor.execute(sql_select_director, [director])
