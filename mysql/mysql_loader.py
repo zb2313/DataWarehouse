@@ -267,7 +267,7 @@ for item in jsonlines.Reader(movies):
         sql_select_actor = "SELECT actor_id FROM div_actor WHERE actor_name = %s;"
         sql_insert_actor = "INSERT INTO div_actor(actor_name, movie_name)" \
                            "VALUES (%s, %s);"
-        sql_update_actor = "UPDATE div_actor SET movie_name = CONCAT(movie_name, ',', %s) WHERE actor_name = %s;"
+        sql_update_actor = "UPDATE div_actor SET movie_name = CONCAT(movie_name, '$', %s) WHERE actor_name = %s;"
 
         try:
             cursor.execute(sql_select_actor, [actor])
