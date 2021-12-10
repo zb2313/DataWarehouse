@@ -4,6 +4,12 @@ import os
 import json
 from py2neo import Graph, Node
 
+def remove_query(query):
+    remove_query0 = query
+    remove_query1 = remove_query0.replace('\"', "\'")
+    remove_query = remove_query1.replace('\\', '/')
+    return remove_query
+
 
 class MedicalGraph:
     def __init__(self):
@@ -42,7 +48,11 @@ class MedicalGraph:
             count += 1
             print("read", count)
             data_json = json.loads(data)
-            movie = data_json['Title']
+            # movie = data_json['Title']
+            # movie0 = data_json['Title']
+            # movie1 = movie0.replace('\"', "\'")
+            # movie = movie1.replace('\\', '/')
+            movie=remove_query(data_json['Title'])
             movie_dict['Title'] = movie
             movies.append(movie)
             movie_dict['IMDB_grade'] = ''
@@ -60,21 +70,21 @@ class MedicalGraph:
                 if len(data_json['reviews']) == 1:
                     movie_dict['reviews1'] = list(data_json['reviews'][0].values())
                     for i in range(8):
-                        movie_dict['reviews1'][i] = str(movie_dict['reviews1'][i])
+                        movie_dict['reviews1'][i] = remove_query(str(movie_dict['reviews1'][i]))
                 if len(data_json['reviews']) == 2:
                     movie_dict['reviews1'] = list(data_json['reviews'][0].values())
                     movie_dict['reviews2'] = list(data_json['reviews'][1].values())
                     for i in range(8):
-                        movie_dict['reviews1'][i] = str(movie_dict['reviews1'][i])
-                        movie_dict['reviews2'][i] = str(movie_dict['reviews2'][i])
+                        movie_dict['reviews1'][i] = remove_query(str(movie_dict['reviews1'][i]))
+                        movie_dict['reviews2'][i] = remove_query(str(movie_dict['reviews2'][i]))
                 if len(data_json['reviews']) == 3:
                     movie_dict['reviews1'] = list(data_json['reviews'][0].values())
                     movie_dict['reviews2'] = list(data_json['reviews'][1].values())
                     movie_dict['reviews3'] = list(data_json['reviews'][2].values())
                     for i in range(8):
-                        movie_dict['reviews1'][i] = str(movie_dict['reviews1'][i])
-                        movie_dict['reviews2'][i] = str(movie_dict['reviews2'][i])
-                        movie_dict['reviews3'][i] = str(movie_dict['reviews3'][i])
+                        movie_dict['reviews1'][i] = remove_query(str(movie_dict['reviews1'][i]))
+                        movie_dict['reviews2'][i] = remove_query(str(movie_dict['reviews2'][i]))
+                        movie_dict['reviews3'][i] = remove_query(str(movie_dict['reviews3'][i]))
 
                 if len(data_json['reviews']) == 4:
                     movie_dict['reviews1'] = list(data_json['reviews'][0].values())
@@ -82,10 +92,10 @@ class MedicalGraph:
                     movie_dict['reviews3'] = list(data_json['reviews'][2].values())
                     movie_dict['reviews4'] = list(data_json['reviews'][3].values())
                     for i in range(8):
-                        movie_dict['reviews1'][i] = str(movie_dict['reviews1'][i])
-                        movie_dict['reviews2'][i] = str(movie_dict['reviews2'][i])
-                        movie_dict['reviews3'][i] = str(movie_dict['reviews3'][i])
-                        movie_dict['reviews4'][i] = str(movie_dict['reviews4'][i])
+                        movie_dict['reviews1'][i] = remove_query(str(movie_dict['reviews1'][i]))
+                        movie_dict['reviews2'][i] = remove_query(str(movie_dict['reviews2'][i]))
+                        movie_dict['reviews3'][i] = remove_query(str(movie_dict['reviews3'][i]))
+                        movie_dict['reviews4'][i] = remove_query(str(movie_dict['reviews4'][i]))
                 if len(data_json['reviews']) == 5:
                     # list(a.values())
                     movie_dict['reviews1'] = list(data_json['reviews'][0].values())
@@ -94,58 +104,58 @@ class MedicalGraph:
                     movie_dict['reviews4'] = list(data_json['reviews'][3].values())
                     movie_dict['reviews5'] = list(data_json['reviews'][4].values())
                     for i in range(8):
-                        movie_dict['reviews1'][i] = str(movie_dict['reviews1'][i])
-                        movie_dict['reviews2'][i] = str(movie_dict['reviews2'][i])
-                        movie_dict['reviews3'][i] = str(movie_dict['reviews3'][i])
-                        movie_dict['reviews4'][i] = str(movie_dict['reviews4'][i])
-                        movie_dict['reviews5'][i] = str(movie_dict['reviews5'][i])
+                        movie_dict['reviews1'][i] = remove_query(str(movie_dict['reviews1'][i]))
+                        movie_dict['reviews2'][i] = remove_query(str(movie_dict['reviews2'][i]))
+                        movie_dict['reviews3'][i] = remove_query(str(movie_dict['reviews3'][i]))
+                        movie_dict['reviews4'][i] = remove_query(str(movie_dict['reviews4'][i]))
+                        movie_dict['reviews5'][i] = remove_query(str(movie_dict['reviews5'][i]))
 
             # 重点
             if 'Actors' in data_json:
                 for actor in data_json['Actors']:
-                    actors += [actor]
-                    do_act.append([movie, actor])
+                    actors += [remove_query(actor)]
+                    do_act.append([movie, remove_query(actor)])
                 tempact = data_json['Actors']
                 if len(tempact) == 2:
-                    act1 = tempact[0]
-                    act2 = tempact[1]
+                    act1 = remove_query(tempact[0])
+                    act2 = remove_query(tempact[1])
                     cooperate_aanda.append([act1, act2])
                     cooperate_aanda.append([act2, act1])
 
             if 'Director' in data_json:
                 for director in data_json['Director']:
-                    directors += [director]
-                    do_dir.append([movie, director])
+                    directors += [remove_query(director)]
+                    do_dir.append([movie, remove_query(director)])
                 tempdir = data_json['Director']
                 if len(tempdir) == 2:
-                    dir1 = tempdir[0]
-                    dir2 = tempdir[1]
+                    dir1 = remove_query(tempdir[0])
+                    dir2 = remove_query(tempdir[1])
                     cooperate_aanda.append([dir1, dir2])
                     cooperate_aanda.append([dir2, dir1])
                 for director in data_json['Director']:
                     if 'Actors' in data_json:
                         for actor in data_json['Actors']:
-                            cooperate_danda.append([director, actor])
-                            cooperate_aandd.append([actor, director])
+                            cooperate_danda.append([remove_query(director), remove_query(actor)])
+                            cooperate_aandd.append([remove_query(actor), remove_query(director)])
 
             if 'style' in data_json:
                 style = data_json['style']
-                styles += [data_json['style']]
-                belongs_to.append([movie, style])
+                styles += [remove_query(data_json['style'])]
+                belongs_to.append([movie, remove_query(style)])
             if 'version' in data_json:
                 for version in data_json['version']:
-                    versions += [version]
-                    has_version.append([movie, version])
+                    versions += [remove_query(version)]
+                    has_version.append([movie, remove_query(version)])
             if 'Date First Available' in data_json:
                 tim = data_json['Date First Available']
-                times += [tim]
-                has_time.append([movie, tim])
+                times += [(tim)]
+                has_time.append([movie, (tim)])
 
             movie_infos.append(movie_dict)
         all_times = []
         for tim in times:
             if tim not in all_times:
-                all_times.append(tim)
+                all_times.append(remove_query(tim))
         return set(movies), set(actors), set(directors), set(styles), set(versions), movie_infos, all_times, \
                belongs_to, do_act, do_dir, cooperate_aandd, cooperate_danda, cooperate_aanda, cooperate_dandd, has_version, has_time
 
@@ -160,7 +170,7 @@ class MedicalGraph:
             print("creatnodes", count, len(nodes))
         return
 
-    '''创建知识图谱中心疾病的节点'''
+    '''创建节点'''
 
     def create_movies_nodes(self, movie_infos):
         count = 0
@@ -176,7 +186,7 @@ class MedicalGraph:
             print("creatmovies", count)
         return
 
-    '''创建知识图谱实体节点类型schema'''
+
 
     def create_graphnodes(self):
         movies, actors, directors, styles, versions, movie_infos, times, belongs_to, do_act, do_dir, cooperate_aandd, cooperate_danda, cooperate_aanda, cooperate_dandd, has_version, has_time = self.read_nodes()
@@ -220,15 +230,18 @@ class MedicalGraph:
             # match(p:Movie{name:"TEST0"}),(q:Style{name:"General"}),z=(p)-[r:belongs_to]->(q) RETURN count(z)   match(p:Movie{name:"TEST0"}),(q:Style{name:"General"}),z=(p)-[r:belongs_to]->(q)
             # set r.num=r.num+1
 
-            #match(p:Movie{name:"TEST1"}),(q:Style{name:"General"}),z=(p)-[r:belongs_to]->(q)
-            #return r.num
-            verify = 'match(p:%s{name:"%s"}),(q:%s{name:"%s"}),z=(p)-[r:%s]->(q) RETURN r.num' % (start_node, p, end_node, q, rel_type)
-            r_num=self.g.run(verify)
-            temp_num0=r_num.data()
-            if len(temp_num0)==0:
-                query = 'match(p:%s),(q:%s) where p.name="%s" and q.name="%s" create (p)-[rel:%s{name:"%s",num:%d}]->(q)' % (start_node, end_node, p, q, rel_type, rel_name, 1)
+            # match(p:Movie{name:"TEST1"}),(q:Style{name:"General"}),z=(p)-[r:belongs_to]->(q)
+            # return r.num
+            verify = 'match(p:%s{name:"%s"}),(q:%s{name:"%s"}),z=(p)-[r:%s]->(q) RETURN r.num' % (
+            start_node, p, end_node, q, rel_type)
+            r_num = self.g.run(verify)
+            temp_num0 = r_num.data()
+            if len(temp_num0) == 0:
+                query = 'match(p:%s),(q:%s) where p.name="%s" and q.name="%s" create (p)-[rel:%s{name:"%s",num:%d}]->(q)' % (
+                start_node, end_node, p, q, rel_type, rel_name, 1)
             else:
-                query = 'match(p:%s{name:"%s"}),(q:%s{name:"%s"}),z=(p)-[r:%s]->(q) set r.num=r.num+1' % (start_node, p, end_node, q, rel_type)
+                query = 'match(p:%s{name:"%s"}),(q:%s{name:"%s"}),z=(p)-[r:%s]->(q) set r.num=r.num+1' % (
+                start_node, p, end_node, q, rel_type)
             # temp_num1=r_num.data().pop()
             # num=list(temp_num1.values())[0]
             #
@@ -251,11 +264,9 @@ class MedicalGraph:
         return
 
 
-
 if __name__ == '__main__':
     handler = MedicalGraph()
     print("step1:导入图谱节点中")
     handler.create_graphnodes()
     print("step2:导入图谱边中")
     handler.create_graphrels()
-
