@@ -3,3 +3,5 @@
 /.idea
 movies.json
 movies2.json
+sentiment-analysis\.data\imdb\aclImdb
+*.txt
