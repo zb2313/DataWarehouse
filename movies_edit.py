@@ -1,7 +1,6 @@
 import jsonlines
 import json
 
-
 file = open('E:\\movies.json', 'r', encoding='utf-8')
 file2 = jsonlines.open('E:\\movies2.json', 'a')
 for line in file.readlines():
@@ -14,6 +13,8 @@ for line in file.readlines():
         average = round(t / len(dic['reviews']), 1)
         print(average)
         dic['ReviewPoint'] = average
+    else:
+        dic['ReviewPoint'] = 0
 
     # 时间处理
     dic_split = str(dic['Date First Available']).replace(' ', ',').split(',')
