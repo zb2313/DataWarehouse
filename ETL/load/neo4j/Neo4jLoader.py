@@ -1,5 +1,4 @@
-# 作者：韩乃超
-# 日期：2021年11月29日
+
 import os
 import json
 from py2neo import Graph, Node
