@@ -12,11 +12,19 @@
 
 >### ETL使用教程
 >
->ETL项目整体按照ETL（extract、transform、load）的流程搭建。首先需要运行
-> pip install -r requirements.txt
+>ETL项目整体按照ETL（extract、transform、load）的流程搭建，首先需要在ETL文件目录下运行以下命令安装python脚本所需要的依赖包。
 >
+>```python
+>pip install -r requirements.txt
+>```
 >
+>其次运行run.py文件
 >
+>```python
+>python run.py
+>```
+>
+>需要注意的是，我们使用了外部IP代理池，在运行爬虫前，需要配置好代理池并运行（代理池没有提交）。
 
 
 
@@ -92,11 +100,11 @@
 
 + #### 评论情感分析
 
-  ⭕️⭕️⭕️⭕️⭕️⭕️⭕️
+  用户对电影的情感态度也是对电影的一项评价指标，我们对用户评论体现出的情感状态进行分析。这里我们参考了一个简单的pytorch情感分析模型（https://github.com/bentrevett/pytorch-sentiment-analysis），经过训练后应用到电影对应的评论数据中，为每条评论计算出一个情感得分，得分越高，意味着用户对这部电影的态度越积极。
 
 + #### 其他
 
-  ⭕️⭕️⭕️⭕️⭕️
+  ⭕
 
 ### Load
 
