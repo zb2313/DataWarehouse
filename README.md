@@ -12,8 +12,8 @@
 
 >### ETL使用教程
 >
->⭕️⭕️⭕️⭕️⭕️
->
+>ETL项目整体按照ETL（extract、transform、load）的流程搭建。首先需要运行
+> pip install -r requirements.txt
 >
 >
 >
