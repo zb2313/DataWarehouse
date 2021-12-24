@@ -116,7 +116,7 @@
 
   1.neo4j图数据库储存规模
 
-  ![image-20211224182032911](C:\Users\Lenovo\Desktop\123\neo4j-1.png)
+  ![image-20211224191136076](README.assets/image-20211224191136076.png)
 
   
 
