@@ -305,9 +305,21 @@ create table xxx as select id, name, tel from yyy;
 
   ##### 资源优化
 
-  Hive的运行建立在分布式系统Hadoop之上，因此Hadoop本身的节点数量也是影响Hive查询的重要因素。我们使用各自的笔记本电脑搭建了一个拥有四个节点的完全分布式云系统，对数据查询进行测试，并和在只有单个节点的伪分布式系统上的查询结果进行对比。实验结果显示，分布式系统的节点数量越多会加快Hive的查询速度。
+  Hive的运行建立在分布式系统Hadoop之上，因此Hadoop本身的节点数量也是影响Hive查询的重要因素。我们使用各自的笔记本电脑搭建了一个拥有四个节点（一个主节点，三个从节点）的完全分布式云系统，对数据查询进行测试，并和在只有单个节点的伪分布式系统上的查询结果进行对比。实验结果显示，在四节点的分布式系统上两次查询的时间都约在50毫秒左右，而单节点伪分布式的查询时间约在500多毫秒左右，可以得出结论增加分布式系统的节点数量会显著增加Hive查询的效率。
 
-  此外，物理机器本身的一些参数如内存等也会影响Hive的查询。我们通过在单节点伪分布式系统机器上开启虚拟内存来模拟内存增加的情况，并对数据进行查询和对比。在实际云服务器测试中，服务器共2G内存，在未开启虚拟内存的情况下，发送查询请求时偶尔会由于内存不足而卡住宕机。为了解决内存不足，我们为服务器开启了10G的虚拟内存，实验截图显示，虚拟内存已开启且使用了400M左右，且这使用的虚拟内存远大于剩余的物理内存，可见在内存容量较小的情况下，增加内存容量可以提高查询的性能，保证查询服务的稳定。
+  ![四节点](README.assets\四节点.png)
+
+  ![四节点2](README.assets\四节点2.png)
+
+  ##### 四节点完全分布式查询时间
+
+  ![四节点查询时间](README.assets\四节点查询时间.png)
+
+  **单节点伪分布式查询时间**
+
+  ![textfile单节点查询时间](README.assets\textfile单节点查询时间.png)
+
+  此外，物理机器本身的一些参数，如内存等也会影响Hive的查询。我们通过在单节点伪分布式系统机器上开启虚拟内存来模拟内存增加的情况，并对数据进行查询和对比。在实际云服务器测试中，服务器共2G内存，在未开启虚拟内存的情况下，发送查询请求时偶尔会由于内存不足而卡住宕机。为了解决内存不足，我们为服务器开启了10G的虚拟内存，实验截图显示，虚拟内存已开启且使用了400M左右，且这使用的虚拟内存远大于剩余的物理内存，可见在总内存容量较小的情况下，增加内存容量可以提高查询的性能，保证查询服务的稳定。
 
   ![开虚拟内存](README.assets\开虚拟内存.png)
 
@@ -324,26 +336,27 @@ create table xxx as select id, name, tel from yyy;
   ###### SEQUENCEFILE
 
   SequenceFile是Hadoop API提供的一种二进制文件支持，其具有使用方便、可分割、可压缩的特点。SequenceFile支持三种压缩选择：NONE，RECORD，BLOCK。Record压缩率低，一般建议使用BLOCK压缩。
-
+  
   ###### RCFILE
 
   RCFILE是一种行列存储相结合的存储方式。首先，其将数据按行分块，保证同一个record在一个块上，避免读一个记录需要读取多个block。其次，块数据列式存储，有利于数据压缩和快速的列存取。RCFile保证同一的数据位于同一节点，因此元组重构代价较低(需要将分散的数据重新组织,比如一列数据散落在不同集群，查询的时候，需要将各个节点的数据重新组织；但是如果数据都在一个机器上，那就没有必要重新组织)。RCFile通过列进行数据压缩，因为同一列都是相同的数据类型，所以压缩比比较好。RCFile可以跳过不必要的列读取。
-
+  
   ###### ORC File
 
   ORCFile存储格式，就是Optimized RC File的缩写。意指优化的RCFile存储格式。相比RCFILE，ORC FILE具有如下特点：每一个任务只输出单个文件，这样可以减少NameNode的负载；支持各种复杂的数据类型，比如datetime,decimal,以及复杂的struct,List,map等；在文件中存储了轻量级的索引数据；基于数据类型的块模式压缩：比如Integer类型使用RLE(RunLength Encoding)算法，而字符串使用字典编码(DictionaryEncoding)；使用单独的RecordReader并行读相同的文件；无需扫描标记就能分割文件；绑定读写所需要的内存；元数据存储使用PB,允许添加和删除字段。
 
   我们主要对默认的TEXTFILE格式和ORCFILE格式在数据存储和数据查询方面进行对比，使用的查询语句如下所示。通过实验结果可以看出，ORC格式的文件存储大小更小，仅有默认TEXTFILE文件格式的三分之一。而且查询速度也更加迅速，比TEXTFILE文件格式快了442毫秒，即0.4秒，可见在规模更大的数据体量下，查询效率会得到可观的提升。
-
+  
   ```sql
   select * from fact_movie where title LIKE "Shadows%"
   ```
-
+  
   ```sql
   select * from fact_movie_orc where title LIKE "Shadows%"
   ```
-
+  
   **TEXTFILE格式的文件大小和查询时间**
+  <<<<<<< Updated upstream
 
   ![textfile文件存储大小](README.assets\textfile文件存储大小.png)
 
@@ -354,6 +367,18 @@ create table xxx as select id, name, tel from yyy;
   ![orc文件存储大小](README.assets\orc文件存储大小.png)
 
   ![orc查询时间](README.assets\orc查询时间.png)
+  =======
+  
+  ![textfile文件存储大小](README.assets\textfile文件存储大小.png)
+  
+  ![textfile单节点查询时间](README.assets\textfile单节点查询时间.png)
+  
+  **ORC格式的文件大小和查询时间**
+  
+  ![orc文件存储大小](README.assets\orc文件存储大小.png)
+  
+  ![orc查询时间](README.assets\orc查询时间.png)
+>>>>>>> Stashed changes
 
 ### 图数据存储
 
