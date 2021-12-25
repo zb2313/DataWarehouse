@@ -104,8 +104,6 @@
 
 + #### 其他
 
-  ⭕
-
 ### Load
 
 #### MySQL
@@ -151,10 +149,10 @@
 | ----------- | ---------- | ------------------------------------------------------------ |
 | IMDB grade  | IMDB评分   | 7.2                                                          |
 | reviews1    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
-| reviews2    |            |                                                              |
-| reviews3    |            |                                                              |
-| reviews4    |            |                                                              |
-| reviews5    |            |                                                              |
+| reviews2    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
+| reviews3    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
+| reviews4    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
+| reviews5    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
 | ReviewPoint | 评价平均分 | 5.0                                                          |
 
 | 关系属性           | 合作次数           |
@@ -189,7 +187,7 @@ Hive最初是Facebook为了解决海量日志数据的分析而开发的，后�
 
 > The Apache Hive ™ data warehouse software facilitates reading, writing, and managing large datasets residing in distributed storage using SQL. Structure can be projected onto data already in storage. A command line tool and JDBC driver are provided to connect users to Hive.
 
-![hive架构](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\hive架构.png)
+![hive架构](README.assets\hive架构.png)
 
 2.Hive的几个特点
 
@@ -239,19 +237,19 @@ create table xxx as select id, name, tel from yyy;
 
 本项目中选择从HDFS中导入数据到Hive表中，这种方式速度更快效率更高。
 
-![hive上传文件](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\hive上传文件.png)
+![hive上传文件](README.assets\hive上传文件.png)
 
-![hive建表textfile](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\hive建表textfile.png)
+![hive建表textfile](README.assets\hive建表textfile.png)
 
 若想将数据导入非默认格式的Hive表中，比如ORC格式的Hive表中，则需要先创建一张临时表，并将数据通过文件导入的形式导入临时表中。再通过查询导入的方式将数据导入其他格式的表中。从实验截图可以看到，sql查询导入语句在执行时被转化为了mapreduce程序，所以其他格式的数据导入比默认的TEXTFILE格式更加复杂。
 
-![orc导入](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\orc导入.png)
+![orc导入](README.assets\orc导入.png)
 
 ## 数据存储设计说明
 
 ### 整体存储模式
 
-在关系型数据库的存储中，所有的所有的电影信息均被储存，并且对所有的查询接口进行了实现，但是对于关系型数据库，查询表于表之间的关系相对较慢，但是对于单个表上的字段的筛选较快。因此，在查询关系类的信息时，采用了图数据库的查询⭕️⭕️⭕️*（随便加点什么）*
+在关系型数据库的存储中，所有的所有的电影信息均被储存，并且对所有的查询接口进行了实现，但是对于关系型数据库，查询表于表之间的关系相对较慢，但是对于单个表上的字段的筛选较快。因此，在查询关系类的信息时，采用了图数据库的查询
 
 ### 关系型存储
 
@@ -311,9 +309,9 @@ create table xxx as select id, name, tel from yyy;
 
   此外，物理机器本身的一些参数如内存等也会影响Hive的查询。我们通过在单节点伪分布式系统机器上开启虚拟内存来模拟内存增加的情况，并对数据进行查询和对比。在实际云服务器测试中，服务器共2G内存，在未开启虚拟内存的情况下，发送查询请求时偶尔会由于内存不足而卡住宕机。为了解决内存不足，我们为服务器开启了10G的虚拟内存，实验截图显示，虚拟内存已开启且使用了400M左右，且这使用的虚拟内存远大于剩余的物理内存，可见在内存容量较小的情况下，增加内存容量可以提高查询的性能，保证查询服务的稳定。
 
-  ![开虚拟内存](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\开虚拟内存.png)
+  ![开虚拟内存](README.assets\开虚拟内存.png)
 
-  ![开启虚拟内存查询](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\开启虚拟内存查询.png)
+  ![开启虚拟内存查询](README.assets\开启虚拟内存查询.png)
 
   ##### 文件格式优化
 
@@ -347,15 +345,15 @@ create table xxx as select id, name, tel from yyy;
 
   **TEXTFILE格式的文件大小和查询时间**
 
-  ![textfile文件存储大小](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\textfile文件存储大小.png)
+  ![textfile文件存储大小](README.assets\textfile文件存储大小.png)
 
-  ![textfile单节点查询时间](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\textfile单节点查询时间.png)
+  ![textfile单节点查询时间](README.assets\textfile单节点查询时间.png)
 
   **ORC格式的文件大小和查询时间**
 
-  ![orc文件存储大小](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\orc文件存储大小.png)
+  ![orc文件存储大小](README.assets\orc文件存储大小.png)
 
-  ![orc查询时间](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\orc查询时间.png)
+  ![orc查询时间](README.assets\orc查询时间.png)
 
 ### 图数据存储
 
