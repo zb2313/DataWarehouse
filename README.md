@@ -108,84 +108,144 @@
 
 ### Load
 
-+ #### MySQL
+#### MySQL
 
-  存储数据库安装在Centos8.2的阿里云服务器上，因为存储时需要计算电影系列，时间复杂度是$O(n^2)$，因此存储脚本选择在服务器上挂起执行，节约本机资源
+存储数据库安装在Centos8.2的阿里云服务器上，因为存储时需要计算电影系列，时间复杂度是$O(n^2)$，因此存储脚本选择在服务器上挂起执行，节约本机资源
 
-+ #### Neo4j
+#### Neo4j
 
-  1.neo4j图数据库储存规模
+1.neo4j图数据库储存规模
 
-  ![image-20211224191136076](README.assets/image-20211224191136076.png)
+![image-20211224191136076](README.assets/image-20211224191136076.png)
 
-  
 
-  2.知识图谱实体类型
 
-  | 实体类型 | 中文含义     | 实体数量 | 举例          |
-  | -------- | ------------ | -------- | ------------- |
-  | Movie    | 电影名称     | 32929    | The Crossing  |
-  | Actor    | 演员         | 25297    | Laura Bailey  |
-  | Director | 导演         | 13370    | Chris Fisher  |
-  | Style    | 电影类型     | 372      | Genesis       |
-  | Version  | 电影版本     | 35       | DVD-ROM       |
-  | Time     | 电影上映时间 | 6230     | April,25,2018 |
+2.知识图谱实体类型
 
-  3.知识图谱实体关系类型
+| 实体类型 | 中文含义     | 实体数量 | 举例          |
+| -------- | ------------ | -------- | ------------- |
+| Movie    | 电影名称     | 32929    | The Crossing  |
+| Actor    | 演员         | 25297    | Laura Bailey  |
+| Director | 导演         | 13370    | Chris Fisher  |
+| Style    | 电影类型     | 372      | Genesis       |
+| Version  | 电影版本     | 35       | DVD-ROM       |
+| Time     | 电影上映时间 | 6230     | April,25,2018 |
 
-  | 实体关系类型    | 中文含义       | 关系数量 | 举例           |
-  | --------------- | -------------- | -------- | -------------- |
-  | belongs_to      | 属于类型       | 34102    | 电影属于类型   |
-  | do_act          | 演电影         | 60337    | 演电影         |
-  | do_dir          | 导电影         | 30407    | 导电影         |
-  | cooperate_aandd | 演员和导演合作 | 48659    | 演员和导演合作 |
-  | cooperate_danda | 导演和演员合作 | 48659    | 导演和演员合作 |
-  | cooperate_aanda | 演员和演员合作 | 47788    | 演员和演员合作 |
-  | cooperate_dandd | 导演和导演合作 | 6408     | 导演和导演合作 |
-  | has_version     | 电影的版本     | 76512    | 电影的版本     |
-  | has_time        | 电影的上映时间 | 34101    | 电影的上映时间 |
+3.知识图谱实体关系类型
 
-  4.知识图谱属性类型
+| 实体关系类型    | 中文含义       | 关系数量 | 举例           |
+| --------------- | -------------- | -------- | -------------- |
+| belongs_to      | 属于类型       | 34102    | 电影属于类型   |
+| do_act          | 演电影         | 60337    | 演电影         |
+| do_dir          | 导电影         | 30407    | 导电影         |
+| cooperate_aandd | 演员和导演合作 | 48659    | 演员和导演合作 |
+| cooperate_danda | 导演和演员合作 | 48659    | 导演和演员合作 |
+| cooperate_aanda | 演员和演员合作 | 47788    | 演员和演员合作 |
+| cooperate_dandd | 导演和导演合作 | 6408     | 导演和导演合作 |
+| has_version     | 电影的版本     | 76512    | 电影的版本     |
+| has_time        | 电影的上映时间 | 34101    | 电影的上映时间 |
 
-  | 属性类型    | 中文含义   | 举例                                                         |
-  | ----------- | ---------- | ------------------------------------------------------------ |
-  | IMDB grade  | IMDB评分   | 7.2                                                          |
-  | reviews1    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
-  | reviews2    |            |                                                              |
-  | reviews3    |            |                                                              |
-  | reviews4    |            |                                                              |
-  | reviews5    |            |                                                              |
-  | ReviewPoint | 评价平均分 | 5.0                                                          |
+4.知识图谱属性类型
 
-  | 关系属性           | 合作次数           |
-  | ------------------ | ------------------ |
-  | cooperate_aanddnum | 演员和导演合作次数 |
-  | cooperate_aandanum | 演员和演员合作次数 |
-  | cooperate_danddnum | 导演和导演合作次数 |
+| 属性类型    | 中文含义   | 举例                                                         |
+| ----------- | ---------- | ------------------------------------------------------------ |
+| IMDB grade  | IMDB评分   | 7.2                                                          |
+| reviews1    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
+| reviews2    |            |                                                              |
+| reviews3    |            |                                                              |
+| reviews4    |            |                                                              |
+| reviews5    |            |                                                              |
+| ReviewPoint | 评价平均分 | 5.0                                                          |
 
-  在现实世界中，除数据本身之外，数据与数据之间联系的重要性也是非同小可，然后传统的关系型数据库并不能很好的表现数据之间的联系，而一些非关系型数据库又不能表现数据之间的联系，但同样是NoSQL的Neo4j图数据库是以图的结构形式来存储数据的，它所存储的就是联系的数据，是关联数据本身。Neo4j是一个高性能的NOSQL图形数据库，它将结构化数据存储在网络上而不是表中。它是一个嵌入式的、基于磁盘的、具备完全的事务特性的Java持久化引擎，但是它将结构化数据存储在网络（从数学角度叫做图）上而不是表中。Neo4j也可以被看作是一个高性能的图引擎，该引擎具有成熟数据库的所有特性。
+| 关系属性           | 合作次数           |
+| ------------------ | ------------------ |
+| cooperate_aanddnum | 演员和导演合作次数 |
+| cooperate_aandanum | 演员和演员合作次数 |
+| cooperate_danddnum | 导演和导演合作次数 |
 
-  在一个图中包含两种基本的数据类型：**Nodes（节点）** 和 **Relationships（关系）**。**Nodes 和 Relationships** 包含key/value形式的属性。Nodes通过Relationships所定义的关系相连起来，形成关系型网络结构。
+在现实世界中，除数据本身之外，数据与数据之间联系的重要性也是非同小可，然后传统的关系型数据库并不能很好的表现数据之间的联系，而一些非关系型数据库又不能表现数据之间的联系，但同样是NoSQL的Neo4j图数据库是以图的结构形式来存储数据的，它所存储的就是联系的数据，是关联数据本身。Neo4j是一个高性能的NOSQL图形数据库，它将结构化数据存储在网络上而不是表中。它是一个嵌入式的、基于磁盘的、具备完全的事务特性的Java持久化引擎，但是它将结构化数据存储在网络（从数学角度叫做图）上而不是表中。Neo4j也可以被看作是一个高性能的图引擎，该引擎具有成熟数据库的所有特性。
 
-  本次项目中希望对电影及其周边信息进行统计和分析，希望通过合理的数据模型构建以及后期的合理优化以达到良好的查询效率。
+在一个图中包含两种基本的数据类型：**Nodes（节点）** 和 **Relationships（关系）**。**Nodes 和 Relationships** 包含key/value形式的属性。Nodes通过Relationships所定义的关系相连起来，形成关系型网络结构。
 
-  ##### 优化方案
+本次项目中希望对电影及其周边信息进行统计和分析，希望通过合理的数据模型构建以及后期的合理优化以达到良好的查询效率。
 
-  1. **增加信息冗余，以空间换时间，可是适当提升查询效率。**将电影的主演、导演、及共多少版本等信息作为电影节点属性冗余存储，当需要根据电影名称查询演员或其他相关信息时，无需再通过关系去寻找目标节点，这时可直接通过查询电影节点属性获得相关值。
+##### 优化方案
 
-  2. **为某些关系设置某些属性，方便查询。**在查询合作次数最多的导演和导演，合作次数最多的演员和导演，合作次数最多的演员和演员等中直接查询关系相应的合作次数进行比较后，按照要求选取top100等。查询关系为O(n)，排序为调用neo4j中的排序。
+1. **增加信息冗余，以空间换时间，可是适当提升查询效率。**将电影的主演、导演、及共多少版本等信息作为电影节点属性冗余存储，当需要根据电影名称查询演员或其他相关信息时，无需再通过关系去寻找目标节点，这时可直接通过查询电影节点属性获得相关值。
 
-  3. **如果配置够好的话(或者开启虚拟内存)，为neo4j内存分配尽可能大。**在配置文件中neo4j的默认设置为dbms.memory.heap.initial_size=512m；dbms.memory.heap.max_size=512m，根据硬件配置，做合适的修改（最大堆内存越大越好，但是要小于机器的物理内存）
+2. **为某些关系设置某些属性，方便查询。**在查询合作次数最多的导演和导演，合作次数最多的演员和导演，合作次数最多的演员和演员等中直接查询关系相应的合作次数进行比较后，按照要求选取top100等。查询关系为O(n)，排序为调用neo4j中的排序。
 
-  4. **对合适的数据进行拆分，即变为多个维度**。在本次项目中，在查询业务中有针对某年，某月，某日新增电影的查询。将上映时间变为年，月，日，等维度(即list)，那么在针对时间对电影进行查询时就可以实现更高的查询效率。
+3. **如果配置够好的话(或者开启虚拟内存)，为neo4j内存分配尽可能大。**在配置文件中neo4j的默认设置为dbms.memory.heap.initial_size=512m；dbms.memory.heap.max_size=512m，根据硬件配置，做合适的修改（最大堆内存越大越好，但是要小于机器的物理内存）
 
-     
+4. **对合适的数据进行拆分，即变为多个维度**。在本次项目中，在查询业务中有针对某年，某月，某日新增电影的查询。将上映时间变为年，月，日，等维度(即list)，那么在针对时间对电影进行查询时就可以实现更高的查询效率。
 
-+ #### Hive
+   
 
-  ⭕️⭕️⭕️⭕️⭕️
+#### Hive
 
-  
+1.Hive简介
+
+Hive最初是Facebook为了解决海量日志数据的分析而开发的，后来开源给了Apache软件基金会。根据官网定义，Hive其实就是一种用类SQL语句来协助读写、管理那些存储在分布式存储系统Hadoop上大数据集的数据仓库软件。
+
+> The Apache Hive ™ data warehouse software facilitates reading, writing, and managing large datasets residing in distributed storage using SQL. Structure can be projected onto data already in storage. A command line tool and JDBC driver are provided to connect users to Hive.
+
+![hive架构](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\hive架构.png)
+
+2.Hive的几个特点
+
+- Hive最大的特点是通过类SQL来分析大数据，而避免了写MapReduce程序来分析数据，这样使得分析数据更容易。
+- 数据是存储在HDFS上的，Hive本身并不提供数据的存储功能
+- Hive是将数据映射成数据库和一张张的表，库和表的元数据信息一般存在关系型数据库上（比如MySQL）。
+- 数据存储方面：它能够存储很大的数据集，并且对数据完整性、格式要求并不严格。
+- 数据处理方面：因为Hive语句最终会生成MapReduce任务去计算，所以不适用于实时计算的场景，它适用于离线分析。
+
+3.Hive写入数据的方式
+
+与Oracle、Mysql等我们熟悉的关系型数据库不同，早期版本的Hive并不支持*INSERT INTO table_name VALUES (value1,value2,value3,...);*这样使用insert语句直接插入一组记录的语句形式。自Hive 0.14之后，Hive支持使用下列格式的语句直接从SQL向表中插入数据。值得注意的是，VALUES子句列出的每一行都会插入到表中且必须为表中的每一列提供值。此外，Hive不支持复杂类型（数组、映射、结构、联合）的文字，因此不可能在INSERT子句中使用它们。这意味着用户不能使用INSERT子句将数据插入到复杂数据类型的列中。综上，虽然新版本的Hive支持INSERT语句，但性能和可用性方面难以满足要求。
+
+```sql
+CREATE TABLE students (name VARCHAR(64), age INT, gpa DECIMAL(3, 2))
+  CLUSTERED BY (age) INTO 2 BUCKETS STORED AS ORC;
+ 
+INSERT INTO TABLE students
+  VALUES ('fred flintstone', 35, 1.28), ('barney rubble', 32, 2.32);
+```
+
+前面也提过，Hive的数据是存储在分布式文件系统HDFS上的，且Hive中的表可看作是对HDFS上结构化数据的一个映射。所以Hive也支持从文件系统中导入数据到表中等多种形式的数据写入方式。
+
+**从本地文件系统中导入数据到Hive表**
+
+```sql
+load data local inpath 'xxx.txt' into table xxx；
+```
+
+**从HDFS上导入数据到Hive表**
+
+```sql
+load data inpath '/home/xxx/add.txt' into table xxx;
+```
+
+**从别的表中查询出相应的数据并导入到Hive表中**
+
+```sql
+insert overwrite table xxx partition(dt='18-09-26') select uid,model,key,value,time from yyy where dt='18-09-26';
+```
+
+**在创建表的时候通过从别的表中查询出相应的记录并插入到所创建的表中**
+
+```sql
+create table xxx as select id, name, tel from yyy;
+```
+
+本项目中选择从HDFS中导入数据到Hive表中，这种方式速度更快效率更高。
+
+![hive上传文件](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\hive上传文件.png)
+
+![hive建表textfile](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\hive建表textfile.png)
+
+若想将数据导入非默认格式的Hive表中，比如ORC格式的Hive表中，则需要先创建一张临时表，并将数据通过文件导入的形式导入临时表中。再通过查询导入的方式将数据导入其他格式的表中。从实验截图可以看到，sql查询导入语句在执行时被转化为了mapreduce程序，所以其他格式的数据导入比默认的TEXTFILE格式更加复杂。
+
+![orc导入](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\orc导入.png)
 
 ## 数据存储设计说明
 
@@ -239,7 +299,63 @@
 
 ### 分布式存储
 
+- #### 存储模型
 
+前文提到过，Hive的存储是建立在Hadoop文件系统之上的，因此Hive本身没有专门的数据存储格式，也不能为数据建立索引，只需要在创建表的时候指定数据中的列分隔符和行分隔符就可以解析数据。因此，Hive存储模型采用和Mysql一样的冗余存储。
+
+- #### 存储优化策略
+
+  ##### 资源优化
+
+  Hive的运行建立在分布式系统Hadoop之上，因此Hadoop本身的节点数量也是影响Hive查询的重要因素。我们使用各自的笔记本电脑搭建了一个拥有四个节点的完全分布式云系统，对数据查询进行测试，并和在只有单个节点的伪分布式系统上的查询结果进行对比。实验结果显示，分布式系统的节点数量越多会加快Hive的查询速度。
+
+  此外，物理机器本身的一些参数如内存等也会影响Hive的查询。我们通过在单节点伪分布式系统机器上开启虚拟内存来模拟内存增加的情况，并对数据进行查询和对比。在实际云服务器测试中，服务器共2G内存，在未开启虚拟内存的情况下，发送查询请求时偶尔会由于内存不足而卡住宕机。为了解决内存不足，我们为服务器开启了10G的虚拟内存，实验截图显示，虚拟内存已开启且使用了400M左右，且这使用的虚拟内存远大于剩余的物理内存，可见在内存容量较小的情况下，增加内存容量可以提高查询的性能，保证查询服务的稳定。
+
+  ![开虚拟内存](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\开虚拟内存.png)
+
+  ![开启虚拟内存查询](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\开启虚拟内存查询.png)
+
+  ##### 文件格式优化
+
+  Hive的文件存储格式包括以下几类：TEXTFILE、SEQUENCEFILE、RCFILE、ORCFILE。其中TEXTFILE为默认格式，建表时不指定则默认为这个格式，导入数据时会直接把数据文件拷贝到hdfs上不进行处理。而SEQUENCEFILE，RCFILE，ORCFILE格式的表不能直接从本地文件导入数据，数据要先导入到TEXTFILE格式的表中， 然后再从表中用insert导入SEQUENCEFILE、RCFILE、ORCFILE表中。
+
+  ###### TEXTFILE
+
+  默认格式，数据不做压缩，磁盘开销大，数据解析开销大。可结合Gzip、Bzip2使用(系统自动检查，执行查询时自动解压)，但使用这种方式，hive不会对数据进行切分，从而无法对数据进行并行操作。
+
+  ###### SEQUENCEFILE
+
+  SequenceFile是Hadoop API提供的一种二进制文件支持，其具有使用方便、可分割、可压缩的特点。SequenceFile支持三种压缩选择：NONE，RECORD，BLOCK。Record压缩率低，一般建议使用BLOCK压缩。
+
+  ###### RCFILE
+
+  RCFILE是一种行列存储相结合的存储方式。首先，其将数据按行分块，保证同一个record在一个块上，避免读一个记录需要读取多个block。其次，块数据列式存储，有利于数据压缩和快速的列存取。RCFile保证同一的数据位于同一节点，因此元组重构代价较低(需要将分散的数据重新组织,比如一列数据散落在不同集群，查询的时候，需要将各个节点的数据重新组织；但是如果数据都在一个机器上，那就没有必要重新组织)。RCFile通过列进行数据压缩，因为同一列都是相同的数据类型，所以压缩比比较好。RCFile可以跳过不必要的列读取。
+
+  ###### ORC File
+
+  ORCFile存储格式，就是Optimized RC File的缩写。意指优化的RCFile存储格式。相比RCFILE，ORC FILE具有如下特点：每一个任务只输出单个文件，这样可以减少NameNode的负载；支持各种复杂的数据类型，比如datetime,decimal,以及复杂的struct,List,map等；在文件中存储了轻量级的索引数据；基于数据类型的块模式压缩：比如Integer类型使用RLE(RunLength Encoding)算法，而字符串使用字典编码(DictionaryEncoding)；使用单独的RecordReader并行读相同的文件；无需扫描标记就能分割文件；绑定读写所需要的内存；元数据存储使用PB,允许添加和删除字段。
+
+  我们主要对默认的TEXTFILE格式和ORCFILE格式在数据存储和数据查询方面进行对比，使用的查询语句如下所示。通过实验结果可以看出，ORC格式的文件存储大小更小，仅有默认TEXTFILE文件格式的三分之一。而且查询速度也更加迅速，比TEXTFILE文件格式快了442毫秒，即0.4秒，可见在规模更大的数据体量下，查询效率会得到可观的提升。
+
+  ```sql
+  select * from fact_movie where title LIKE "Shadows%"
+  ```
+
+  ```sql
+  select * from fact_movie_orc where title LIKE "Shadows%"
+  ```
+
+  **TEXTFILE格式的文件大小和查询时间**
+
+  ![textfile文件存储大小](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\textfile文件存储大小.png)
+
+  ![textfile单节点查询时间](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\textfile单节点查询时间.png)
+
+  **ORC格式的文件大小和查询时间**
+
+  ![orc文件存储大小](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\orc文件存储大小.png)
+
+  ![orc查询时间](C:\TongJi\junior1\数据仓库\DaraWareHouse-repo\README.assets\orc查询时间.png)
 
 ### 图数据存储
 
