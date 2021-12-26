@@ -356,7 +356,7 @@ create table xxx as select id, name, tel from yyy;
   ```
   
   **TEXTFILE格式的文件大小和查询时间**
-  <<<<<<< Updated upstream
+
 
   ![textfile文件存储大小](README.assets\textfile文件存储大小.png)
 
@@ -367,22 +367,74 @@ create table xxx as select id, name, tel from yyy;
   ![orc文件存储大小](README.assets\orc文件存储大小.png)
 
   ![orc查询时间](README.assets\orc查询时间.png)
-  =======
-  
-  ![textfile文件存储大小](README.assets\textfile文件存储大小.png)
-  
-  ![textfile单节点查询时间](README.assets\textfile单节点查询时间.png)
-  
-  **ORC格式的文件大小和查询时间**
-  
-  ![orc文件存储大小](README.assets\orc文件存储大小.png)
-  
-  ![orc查询时间](README.assets\orc查询时间.png)
->>>>>>> Stashed changes
+
 
 ### 图数据存储
 
+1.neo4j图数据库储存规模
 
+![image-20211224191136076](README.assets/image-20211224191136076.png)
+
+
+
+2.知识图谱实体类型
+
+| 实体类型 | 中文含义     | 实体数量 | 举例          |
+| -------- | ------------ | -------- | ------------- |
+| Movie    | 电影名称     | 32929    | The Crossing  |
+| Actor    | 演员         | 25297    | Laura Bailey  |
+| Director | 导演         | 13370    | Chris Fisher  |
+| Style    | 电影类型     | 372      | Genesis       |
+| Version  | 电影版本     | 35       | DVD-ROM       |
+| Time     | 电影上映时间 | 6230     | April,25,2018 |
+
+3.知识图谱实体关系类型
+
+| 实体关系类型    | 中文含义       | 关系数量 | 举例           |
+| --------------- | -------------- | -------- | -------------- |
+| belongs_to      | 属于类型       | 34102    | 电影属于类型   |
+| do_act          | 演电影         | 60337    | 演电影         |
+| do_dir          | 导电影         | 30407    | 导电影         |
+| cooperate_aandd | 演员和导演合作 | 48659    | 演员和导演合作 |
+| cooperate_danda | 导演和演员合作 | 48659    | 导演和演员合作 |
+| cooperate_aanda | 演员和演员合作 | 47788    | 演员和演员合作 |
+| cooperate_dandd | 导演和导演合作 | 6408     | 导演和导演合作 |
+| has_version     | 电影的版本     | 76512    | 电影的版本     |
+| has_time        | 电影的上映时间 | 34101    | 电影的上映时间 |
+
+4.知识图谱属性类型
+
+| 属性类型    | 中文含义   | 举例                                                         |
+| ----------- | ---------- | ------------------------------------------------------------ |
+| IMDB grade  | IMDB评分   | 7.2                                                          |
+| reviews1    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
+| reviews2    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
+| reviews3    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
+| reviews4    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
+| reviews5    | 5条评价    | This film is OK IF YOU WANT A QUICK LESSON ON HIS LIFE. They skip over many things....... |
+| ReviewPoint | 评价平均分 | 5.0                                                          |
+
+| 关系属性           | 合作次数           |
+| ------------------ | ------------------ |
+| cooperate_aanddnum | 演员和导演合作次数 |
+| cooperate_aandanum | 演员和演员合作次数 |
+| cooperate_danddnum | 导演和导演合作次数 |
+
+在现实世界中，除数据本身之外，数据与数据之间联系的重要性也是非同小可，然后传统的关系型数据库并不能很好的表现数据之间的联系，而一些非关系型数据库又不能表现数据之间的联系，但同样是NoSQL的Neo4j图数据库是以图的结构形式来存储数据的，它所存储的就是联系的数据，是关联数据本身。Neo4j是一个高性能的NOSQL图形数据库，它将结构化数据存储在网络上而不是表中。它是一个嵌入式的、基于磁盘的、具备完全的事务特性的Java持久化引擎，但是它将结构化数据存储在网络（从数学角度叫做图）上而不是表中。Neo4j也可以被看作是一个高性能的图引擎，该引擎具有成熟数据库的所有特性。
+
+在一个图中包含两种基本的数据类型：**Nodes（节点）** 和 **Relationships（关系）**。**Nodes 和 Relationships** 包含key/value形式的属性。Nodes通过Relationships所定义的关系相连起来，形成关系型网络结构。
+
+本次项目中希望对电影及其周边信息进行统计和分析，希望通过合理的数据模型构建以及后期的合理优化以达到良好的查询效率。
+
+##### 优化方案
+
+1. **增加信息冗余，以空间换时间，可是适当提升查询效率。**将电影的主演、导演、及共多少版本等信息作为电影节点属性冗余存储，当需要根据电影名称查询演员或其他相关信息时，无需再通过关系去寻找目标节点，这时可直接通过查询电影节点属性获得相关值。
+
+2. **为某些关系设置某些属性，方便查询。**在查询合作次数最多的导演和导演，合作次数最多的演员和导演，合作次数最多的演员和演员等中直接查询关系相应的合作次数进行比较后，按照要求选取top100等。查询关系为O(n)，排序为调用neo4j中的排序。
+
+3. **如果配置够好的话(或者开启虚拟内存)，为neo4j内存分配尽可能大。**在配置文件中neo4j的默认设置为dbms.memory.heap.initial_size=512m；dbms.memory.heap.max_size=512m，根据硬件配置，做合适的修改（最大堆内存越大越好，但是要小于机器的物理内存）
+
+4. **对合适的数据进行拆分，即变为多个维度**。在本次项目中，在查询业务中有针对某年，某月，某日新增电影的查询。将上映时间变为年，月，日，等维度(即list)，那么在针对时间对电影进行查询时就可以实现更高的查询效率。
 
 
 
@@ -451,8 +503,12 @@ create table xxx as select id, name, tel from yyy;
 + 对于一般的查询，比如查询某年某月有哪些电影，某个季度有哪些电影，某个类别有哪些电影，采用MySQL数据库比较迅速，如果在图数据库上执行相关的查询，速度较慢，因为不能直接对节点进行查询，首先需要查询关系，才能再查询节点的数据
 + 对于有多种关联的数据查询，比如查询经常合作的导演的榜单，经常合作的演员的榜单，需要使用图数据库Neo4j进行查询，使用MySQL进行查询的时候，需要多次查询多张数据表，再进行统计排序操作，因此时间复杂度较高；而对于图数据库，则只需要查询关系即可，因此查询速度较快
 + 在查询的时候，如果有设置有数据的冗余，则应选择冗余数据进行查询，这样相比一般的查询，不需要进行多张表的查询；同时在查询的时候，应该注意join的使用，如果两张表的数据量都非常大，join操作可能导致服务器的内存不够
++ **增加信息冗余，以空间换时间，可是适当提升查询效率。**将电影的主演、导演、及共多少版本等信息作为电影节点属性冗余存储，当需要根据电影名称查询演员或其他相关信息时，无需再通过关系去寻找目标节点，这时可直接通过查询电影节点属性获得相关值。
+2. **为某些关系设置某些属性，方便查询。**在查询合作次数最多的导演和导演，合作次数最多的演员和导演，合作次数最多的演员和演员等中直接查询关系相应的合作次数进行比较后，按照要求选取top100等。查询关系为O(n)，排序为调用neo4j中的排序。
 
-+ ⭕️⭕️⭕️⭕️⭕️
+3. **如果配置够好的话(或者开启虚拟内存)，为neo4j内存分配尽可能大。**在配置文件中neo4j的默认设置为dbms.memory.heap.initial_size=512m；dbms.memory.heap.max_size=512m，根据硬件配置，做合适的修改（最大堆内存越大越好，但是要小于机器的物理内存）
+
+4. **对合适的数据进行拆分，即变为多个维度**。在本次项目中，在查询业务中有针对某年，某月，某日新增电影的查询。将上映时间变为年，月，日，等维度(即list)，那么在针对时间对电影进行查询时就可以实现更高的查询效率。
 
 ### 数据质量分析
 
