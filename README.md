@@ -187,7 +187,7 @@ Hive最初是Facebook为了解决海量日志数据的分析而开发的，后�
 
 > The Apache Hive ™ data warehouse software facilitates reading, writing, and managing large datasets residing in distributed storage using SQL. Structure can be projected onto data already in storage. A command line tool and JDBC driver are provided to connect users to Hive.
 
-![hive架构](README.assets\hive架构.png)
+![hive架构](README.assets/hive架构.png)
 
 2.Hive的几个特点
 
@@ -237,13 +237,13 @@ create table xxx as select id, name, tel from yyy;
 
 本项目中选择从HDFS中导入数据到Hive表中，这种方式速度更快效率更高。
 
-![hive上传文件](README.assets\hive上传文件.png)
+![hive上传文件](README.assets/hive上传文件.png)
 
-![hive建表textfile](README.assets\hive建表textfile.png)
+![hive建表textfile](README.assets/hive建表textfile.png)
 
 若想将数据导入非默认格式的Hive表中，比如ORC格式的Hive表中，则需要先创建一张临时表，并将数据通过文件导入的形式导入临时表中。再通过查询导入的方式将数据导入其他格式的表中。从实验截图可以看到，sql查询导入语句在执行时被转化为了mapreduce程序，所以其他格式的数据导入比默认的TEXTFILE格式更加复杂。
 
-![orc导入](README.assets\orc导入.png)
+![orc导入](README.assets/orc导入.png)
 
 ## 数据存储设计说明
 
@@ -307,23 +307,23 @@ create table xxx as select id, name, tel from yyy;
 
   Hive的运行建立在分布式系统Hadoop之上，因此Hadoop本身的节点数量也是影响Hive查询的重要因素。我们使用各自的笔记本电脑搭建了一个拥有四个节点（一个主节点，三个从节点）的完全分布式云系统，对数据查询进行测试，并和在只有单个节点的伪分布式系统上的查询结果进行对比。实验结果显示，在四节点的分布式系统上两次查询的时间都约在50毫秒左右，而单节点伪分布式的查询时间约在500多毫秒左右，可以得出结论增加分布式系统的节点数量会显著增加Hive查询的效率。
 
-  ![四节点](README.assets\四节点.png)
+  ![四节点](README.assets/四节点.png)
 
-  ![四节点2](README.assets\四节点2.png)
+  ![四节点2](README.assets/四节点2.png)
 
   ##### 四节点完全分布式查询时间
 
-  ![四节点查询时间](README.assets\四节点查询时间.png)
+  ![四节点查询时间](README.assets/四节点查询时间.png)
 
   **单节点伪分布式查询时间**
 
-  ![textfile单节点查询时间](README.assets\textfile单节点查询时间.png)
+  ![textfile单节点查询时间](README.assets/textfile单节点查询时间.png)
 
   此外，物理机器本身的一些参数，如内存等也会影响Hive的查询。我们通过在单节点伪分布式系统机器上开启虚拟内存来模拟内存增加的情况，并对数据进行查询和对比。在实际云服务器测试中，服务器共2G内存，在未开启虚拟内存的情况下，发送查询请求时偶尔会由于内存不足而卡住宕机。为了解决内存不足，我们为服务器开启了10G的虚拟内存，实验截图显示，虚拟内存已开启且使用了400M左右，且这使用的虚拟内存远大于剩余的物理内存，可见在总内存容量较小的情况下，增加内存容量可以提高查询的性能，保证查询服务的稳定。
 
-  ![开虚拟内存](README.assets\开虚拟内存.png)
+  ![开虚拟内存](README.assets/开虚拟内存.png)
 
-  ![开启虚拟内存查询](README.assets\开启虚拟内存查询.png)
+  ![开启虚拟内存查询](README.assets/开启虚拟内存查询.png)
 
   ##### 文件格式优化
 
@@ -357,15 +357,15 @@ create table xxx as select id, name, tel from yyy;
   
   **TEXTFILE格式的文件大小和查询时间**
   
-  ![textfile文件存储大小](README.assets\textfile文件存储大小.png)
+  ![textfile文件存储大小](README.assets/textfile文件存储大小.png)
   
-  ![textfile单节点查询时间](README.assets\textfile单节点查询时间.png)
+  ![textfile单节点查询时间](README.assets/textfile单节点查询时间.png)
   
   **ORC格式的文件大小和查询时间**
   
-  ![orc文件存储大小](README.assets\orc文件存储大小.png)
+  ![orc文件存储大小](README.assets/orc文件存储大小.png)
   
-  ![orc查询时间](README.assets\orc查询时间.png)
+  ![orc查询时间](README.assets/orc查询时间.png)
 
 ### 图数据存储
 
