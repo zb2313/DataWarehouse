@@ -3,10 +3,10 @@ import pymysql
 
 # 数据库连接
 dw_mysqldb = pymysql.connect(
-    host='139.196.202.57',
+    host='0.0.0.0',
     # host='127.0.0.1',
     user='dataWarehouseAdm',
-    password='dataWarehouse_123',
+    password='pwd',
     database='dataWarehouseDB',
 )
 

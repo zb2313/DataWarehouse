@@ -4,12 +4,13 @@ import pymysql
 def loadImage():
     # 数据库连接
     dw_mysqldb = pymysql.connect(
-        host='139.196.202.57',
-        # host='127.0.0.1',
-        user='dataWarehouseAdm',
-        password='dataWarehouse_123',
-        database='dataWarehouseDB',
-    )
+    host='0.0.0.0',
+    # host='127.0.0.1',
+    user='dataWarehouseAdm',
+    password='pwd',
+    database='dataWarehouseDB',
+)
+
 
     # 可以执行sql的光标对象
     cursor = dw_mysqldb.cursor()
